@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.spec.bak
+
+# Local data / secrets (never commit)
+*.enc
+key.bin
+google_token.json
+cache.db
+credentials.json
+client_secret*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Audio cache (if ever placed in-tree)
+audio_cache/

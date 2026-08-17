@@ -1,0 +1,26 @@
+# ForTheMix runtime dependencies
+fastapi==0.111.0
+uvicorn==0.30.1
+pywebview==5.1
+pydantic==2.7.4
+
+# Audio analysis
+librosa==0.10.2.post1
+numpy==1.26.4
+soundfile==0.12.1
+audioread==3.0.1
+mutagen==1.47.0
+
+# Google Drive
+google-api-python-client==2.134.0
+google-auth==2.30.0
+google-auth-oauthlib==1.2.0
+
+# AI curation
+anthropic==0.31.2
+
+# Local credential encryption
+cryptography==42.0.8
+
+# Packaging (build-time only)
+pyinstaller==6.9.0

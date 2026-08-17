@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ForTheMix</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🎧</span>
+      <span class="brand-name">ForTheMix</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="library">Library</button>
+      <button class="tab" data-tab="mix">Mix&nbsp;Builder</button>
+      <button class="tab" data-tab="curator">AI&nbsp;Curator</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </nav>
+    <div class="status-pills">
+      <span id="pill-drive" class="pill off" title="Google Drive">Drive</span>
+      <span id="pill-ai" class="pill off" title="Anthropic API">AI</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================ LIBRARY ============================ -->
+    <section id="tab-library" class="panel active">
+      <div class="panel-head">
+        <div>
+          <h1>Library</h1>
+          <p class="sub" id="library-folder">No folder selected</p>
+        </div>
+        <div class="actions">
+          <button id="btn-analyze" class="primary">Analyse Drive folder</button>
+          <button id="btn-refresh-tracks" class="ghost">Refresh</button>
+        </div>
+      </div>
+
+      <div id="analyze-progress" class="progress-wrap hidden">
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text">Working…</div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="track-table">
+          <thead>
+            <tr>
+              <th></th><th>Title</th><th>Artist</th><th>Genre</th>
+              <th>BPM</th><th>Key</th><th>Energy</th><th>Time</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="track-rows">
+            <tr><td colspan="9" class="empty">No tracks yet. Connect Drive in Settings, pick a folder, then Analyse.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =========================== MIX BUILDER ========================= -->
+    <section id="tab-mix" class="panel">
+      <div class="mix-layout">
+        <div class="mix-available">
+          <h2>Available tracks</h2>
+          <input id="mix-search" class="search" type="text" placeholder="Filter…" />
+          <ul id="available-list" class="track-list"></ul>
+        </div>
+
+        <div class="mix-sequence">
+          <div class="panel-head compact">
+            <h2>Your mix <span id="mix-count" class="count">0</span></h2>
+            <div class="actions">
+              <button id="btn-clear-mix" class="ghost">Clear</button>
+              <button id="btn-export" class="primary">Export M3U</button>
+            </div>
+          </div>
+          <div id="mix-list" class="mix-list">
+            <p class="empty">Add tracks from the left to start building. Transition tips appear between them.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Player dock -->
+      <div id="player" class="player hidden">
+        <canvas id="waveform" height="72"></canvas>
+        <div class="player-controls">
+          <button id="pl-play" class="round">▶</button>
+          <span id="pl-title" class="pl-title">—</span>
+          <span id="pl-time" class="pl-time">0:00 / 0:00</span>
+          <button id="pl-audition" class="ghost" title="Jump to the outgoing track's end into the next track">Audition transition ⏭</button>
+          <button id="pl-close" class="ghost">✕</button>
+        </div>
+        <audio id="audio" preload="auto"></audio>
+      </div>
+    </section>
+
+    <!-- ============================ CURATOR =========================== -->
+    <section id="tab-curator" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>AI Curator</h1>
+          <p class="sub">Describe the set you want — it's built from your analysed library.</p>
+        </div>
+      </div>
+
+      <div class="curator-grid">
+        <div class="curator-input">
+          <label>Describe the playlist</label>
+          <textarea id="curate-desc" rows="5" placeholder="e.g. Sunset rooftop warm-up. Deep, warm house, slowly building energy, nothing too vocal. Smooth key changes."></textarea>
+          <div class="row">
+            <label>Target length (minutes, optional)
+              <input id="curate-minutes" type="number" min="5" max="480" placeholder="60" />
+            </label>
+          </div>
+          <button id="btn-curate" class="primary">Curate playlist</button>
+          <p id="curate-status" class="hint"></p>
+        </div>
+
+        <div class="curator-output">
+          <div id="curate-reasoning" class="reasoning hidden"></div>
+          <ul id="curate-result" class="track-list"></ul>
+          <button id="btn-load-mix" class="primary hidden">Load into Mix Builder</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ SETTINGS ========================== -->
+    <section id="tab-settings" class="panel">
+      <div class="panel-head"><h1>Settings</h1></div>
+
+      <div class="settings-card">
+        <h3>Google Drive</h3>
+        <p class="hint">The app signs into your Google Drive to read the folder you nominate. Enter an OAuth client (from Google Cloud Console → Credentials → OAuth client ID → Desktop app).</p>
+        <label>OAuth client ID <input id="set-gid" type="text" placeholder="xxxxx.apps.googleusercontent.com" /></label>
+        <label>OAuth client secret <input id="set-gsecret" type="password" placeholder="(hidden — leave blank to keep existing)" /></label>
+        <div class="actions">
+          <button id="btn-save-google" class="ghost">Save client</button>
+          <button id="btn-connect" class="primary">Connect Google Drive</button>
+          <button id="btn-disconnect" class="ghost hidden">Disconnect</button>
+          <span id="drive-state" class="state">Not connected</span>
+        </div>
+
+        <div class="folder-picker">
+          <label>Nominated folder</label>
+          <div class="row">
+            <input id="folder-search" type="text" placeholder="Search folder by name…" />
+            <button id="btn-folder-search" class="ghost">Search</button>
+          </div>
+          <ul id="folder-results" class="folder-list"></ul>
+          <p class="hint" id="selected-folder">None selected</p>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Anthropic (AI Curator)</h3>
+        <p class="hint">Paste your Anthropic API key. Stored encrypted on this machine and never leaves it except to call the Claude API.</p>
+        <label>API key <input id="set-akey" type="password" placeholder="sk-ant-… (leave blank to keep existing)" /></label>
+        <label>Model
+          <select id="set-model">
+            <option value="claude-opus-4-8">Claude Opus 4.8 (best)</option>
+            <option value="claude-sonnet-5">Claude Sonnet 5</option>
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (fast/cheap)</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button id="btn-save-anthropic" class="ghost">Save</button>
+          <span id="ai-state" class="state">No key</span>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Mixing preferences</h3>
+        <label>Smooth BPM tolerance (± BPM considered an easy beatmatch)
+          <input id="set-bpmtol" type="number" min="1" max="20" value="6" />
+        </label>
+        <div class="actions">
+          <button id="btn-save-prefs" class="ghost">Save</button>
+          <button id="btn-clear-cache" class="danger">Clear analysis cache</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>
