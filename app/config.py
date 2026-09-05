@@ -86,6 +86,8 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "audio_device_name": "",
     "beatmatch_warn_pct": 6,         # warn if a beatmatch needs > this % tempo change
     "mix_render_sr": 44100,          # sample rate for rendered mixes
+    "theme": "dark",                 # UI theme: "dark" | "light"
+    "density": "comfortable",        # UI row density: "comfortable" | "compact"
 }
 
 

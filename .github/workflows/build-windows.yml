@@ -28,6 +28,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Fetch RubberBand CLI (bundled for beatmatched rendering)
+        shell: pwsh
+        continue-on-error: true   # build still works via the librosa fallback if this fails
+        run: |
+          $url = "https://breakfastquay.com/files/releases/rubberband-3.3.0-gpl-executable-windows.zip"
+          Invoke-WebRequest -Uri $url -OutFile rb.zip -UseBasicParsing
+          Expand-Archive rb.zip -DestinationPath rb_extract -Force
+          New-Item -ItemType Directory -Force -Path vendor/rubberband | Out-Null
+          Get-ChildItem -Recurse rb_extract -Include *.exe,*.dll | Copy-Item -Destination vendor/rubberband -Force
+          Write-Host "Bundled RubberBand files:"
+          Get-ChildItem vendor/rubberband
+
       - name: Build app with PyInstaller
         run: pyinstaller forthemix.spec
 

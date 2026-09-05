@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,253 +7,206 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar">
+  <!-- ============================ HEADER ============================ -->
+  <header class="header">
     <div class="brand">
-      <span class="logo">🎧</span>
-      <span class="brand-name">ForTheMix</span>
+      <span class="sq">/</span>
+      <span class="word">FOR<em>THE</em>MIX</span>
     </div>
-    <nav class="tabs">
-      <button class="tab active" data-tab="library">Library</button>
-      <button class="tab" data-tab="mix">Mix&nbsp;Builder</button>
-      <button class="tab" data-tab="curator">AI&nbsp;Curator</button>
-      <button class="tab" data-tab="settings">Settings</button>
-    </nav>
-    <div class="status-pills">
-      <span id="pill-drive" class="pill off" title="Google Drive">Drive</span>
-      <span id="pill-ai" class="pill off" title="Anthropic API">AI</span>
+    <div class="status">
+      <span id="pill-drive" class="pill"><span class="dot"></span>Drive</span>
+      <span id="pill-ai" class="pill"><span class="dot"></span>Claude</span>
+      <span id="track-count" class="count-pill">0 tracks</span>
     </div>
+    <span class="hspace"></span>
+    <button id="btn-density" class="htoggle">▥ Comfortable</button>
+    <button id="btn-theme" class="htoggle">◐ Light</button>
+    <button id="btn-settings" class="htoggle">⚙ Keys</button>
   </header>
 
-  <main>
-    <!-- ============================ LIBRARY ============================ -->
-    <section id="tab-library" class="panel active">
-      <div class="panel-head">
-        <div>
-          <h1>Library</h1>
-          <p class="sub" id="library-folder">No folder selected</p>
-        </div>
-        <div class="actions">
-          <button id="btn-analyze" class="primary">Analyse Drive folder</button>
-          <button id="btn-refresh-tracks" class="ghost">Refresh</button>
-        </div>
-      </div>
-
-      <div id="analyze-progress" class="progress-wrap hidden">
-        <div class="progress-bar"><div id="progress-fill"></div></div>
-        <div class="progress-text" id="progress-text">Working…</div>
-      </div>
-
-      <div class="table-wrap">
-        <table id="track-table">
-          <thead>
-            <tr>
-              <th></th><th>Title</th><th>Artist</th><th>Genre</th>
-              <th>BPM</th><th>Key</th><th>Energy</th><th>Time</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="track-rows">
-            <tr><td colspan="9" class="empty">No tracks yet. Connect Drive in Settings, pick a folder, then Analyse.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- =========================== MIX BUILDER ========================= -->
-    <section id="tab-mix" class="panel">
-      <div class="mix-layout">
-        <div class="mix-available">
-          <h2>Available tracks</h2>
-          <input id="mix-search" class="search" type="text" placeholder="Filter…" />
-          <ul id="available-list" class="track-list"></ul>
-        </div>
-
-        <div class="mix-sequence">
-          <div class="panel-head compact">
-            <h2>Your mix <span id="mix-count" class="count">0</span></h2>
-            <div class="actions">
-              <button id="btn-clear-mix" class="ghost">Clear</button>
-              <button id="btn-save-mix" class="ghost">💾 Save mix</button>
-              <button id="btn-save-folder" class="ghost" title="Write the playlist into your local Mixes folder">Save to folder</button>
-              <button id="btn-save-drive" class="ghost" title="Upload the finished mix to your Drive project-mixes folder">☁ Save to Drive</button>
-              <button id="btn-export" class="primary">Export M3U</button>
-            </div>
+  <!-- ============================ FIRST RUN ============================ -->
+  <section id="state-firstrun" class="state">
+    <div class="firstrun">
+      <p class="eyebrow">First run — three steps</p>
+      <h1>Point it at a folder. It does the rest.</h1>
+      <div class="steps">
+        <div class="step" id="step-drive">
+          <div class="num">1</div>
+          <div>
+            <h3>Connect Google Drive</h3>
+            <p>Read-only access to the one folder you nominate. Nothing is modified or uploaded.</p>
+            <button id="fr-connect" class="btn">Connect Google Drive</button>
+            <button id="fr-disconnect" class="btn hidden">Connected — disconnect</button>
           </div>
-
-          <div class="saved-bar">
-            <label>Saved mixes</label>
-            <select id="saved-mixes"><option value="">— load a saved mix —</option></select>
-            <button id="btn-load-saved" class="mini">Load</button>
-            <button id="btn-delete-saved" class="mini">Delete</button>
+        </div>
+        <div class="step" id="step-folder">
+          <div class="num">2</div>
+          <div>
+            <h3>Nominate the folder</h3>
+            <p>Pick the folder of tracks. We only read this one folder.</p>
+            <input id="fr-folder-search" type="search" placeholder="SEARCH DRIVE FOLDERS" style="width:100%" />
+            <div id="fr-folder-list" class="folder-list hidden"></div>
           </div>
-
-          <div id="mix-list" class="mix-list">
-            <p class="empty">Add tracks from the left to start building. Transition tips appear between them.</p>
+        </div>
+        <div class="step" id="step-analyse">
+          <div class="num">3</div>
+          <div>
+            <h3>Analyse</h3>
+            <p id="fr-analyse-copy">Analyses genre, key, BPM and energy for each file. Results are cached, so each file is only analysed once.</p>
+            <button id="fr-analyse" class="btn pri">Analyse the folder</button>
           </div>
         </div>
       </div>
+      <p class="footnote">The Anthropic key is optional — add it under ⚙ Keys for Claude-powered curation; without it, curation falls back to offline rules.</p>
+    </div>
+  </section>
 
-      <!-- Player dock -->
-      <div id="player" class="player hidden">
-        <canvas id="waveform" height="72"></canvas>
-        <div class="player-controls">
-          <button id="pl-play" class="round">▶</button>
-          <span id="pl-title" class="pl-title">—</span>
-          <span id="pl-time" class="pl-time">0:00 / 0:00</span>
-          <button id="pl-audition" class="ghost" title="Jump to the outgoing track's end into the next track">Audition transition ⏭</button>
-          <button id="pl-close" class="ghost">✕</button>
-        </div>
-        <audio id="audio" preload="auto"></audio>
+  <!-- ============================ ANALYSING ============================ -->
+  <section id="state-analysing" class="state">
+    <div class="analysing">
+      <p class="eyebrow">Analysing — you can keep working</p>
+      <div id="an-pct" class="bignum">0%</div>
+      <p id="an-sub" class="subline">0 of 0 analysed</p>
+      <div class="progress"><i id="an-fill"></i></div>
+      <div class="arow">
+        <button id="an-pause" class="btn">❙❙ Pause</button>
+        <button id="an-skip" class="btn pri">Skip to library</button>
+      </div>
+      <div class="feed">
+        <div class="fhead">Live results — cached, so a folder is only ever analysed once</div>
+        <div id="an-feed"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ DESKTOP ============================ -->
+  <section id="state-desktop" class="state">
+    <div id="metrics" class="metrics"></div>
+    <div class="work">
+      <!-- Left rail -->
+      <div class="rail">
+        <section class="curator">
+          <h2>Curator</h2>
+          <p class="sub">Say it plainly. Claude builds it from your analysed library.</p>
+          <textarea id="brief" rows="3" placeholder="Sunset rooftop warm-up. Deep warm house, slowly building, nothing too vocal."></textarea>
+          <div class="presets">
+            <button class="btn preset" data-preset="Sunset rooftop warm-up. Deep warm house, slowly building, nothing too vocal.">Sunset rooftop</button>
+            <button class="btn preset" data-preset="Peak time. Driving tech house, high energy, tight harmonic mixing.">Peak time</button>
+            <button class="btn preset" data-preset="Wind down. Melodic, warm, gently dropping energy toward the close.">Wind down</button>
+          </div>
+          <div class="minrow">
+            <div class="mwrap"><input id="minutes" type="number" min="10" max="240" placeholder="60" /><span class="mlabel">min</span></div>
+            <button id="btn-curate" class="btn pri">Curate</button>
+          </div>
+          <div id="reason" class="reason hidden"></div>
+        </section>
+
+        <section class="health">
+          <h2>Library health</h2>
+          <div id="health-rows"></div>
+        </section>
+
+        <section class="arc">
+          <h2>Energy arc</h2>
+          <div id="arc-bars" class="bars"></div>
+          <div id="arc-tally" class="tally"></div>
+        </section>
       </div>
 
-      <!-- Mix script: timecoded transitions -> preview & render -->
-      <div class="mixscript">
-        <div class="panel-head compact">
-          <h2>Mix script <span class="count" style="background:var(--bg-3);color:var(--muted)">timecoded</span></h2>
-          <div class="actions">
-            <label class="inline"><input type="checkbox" id="beatmatch-toggle" checked /> Beatmatch</label>
-            <button id="btn-parse-script" class="ghost">Parse</button>
-            <button id="btn-render-mix" class="primary">Render mix</button>
+      <!-- Main pane -->
+      <div class="pane">
+        <div class="tabbar">
+          <button class="tab on" data-pane="library">Library</button>
+          <button class="tab" data-pane="set">The set (<span id="set-count">0</span>)</button>
+          <span class="grow"></span>
+          <button id="btn-clear-set" class="tab" style="color:var(--ink2)">Clear set</button>
+          <button id="btn-export" class="tab" style="background:var(--acid);color:var(--acidink)">Export M3U</button>
+        </div>
+
+        <!-- Library pane -->
+        <div id="pane-library" class="lib">
+          <div class="toolbar">
+            <input id="filter" class="filter" type="search" placeholder="FILTER TITLE / ARTIST / KEY" />
+            <button class="btn crate on" data-crate="all">All</button>
+            <button class="btn crate" data-crate="unanalysed">Unanalysed</button>
+            <button class="btn crate" data-crate="nogenre">No genre tag</button>
+            <button class="btn crate" data-crate="lowconf">Low-confidence key</button>
+            <button class="btn crate" data-crate="dupes">Duplicates</button>
+            <button class="btn crate" data-crate="bpm">126–134 bpm</button>
+          </div>
+          <div class="grid-head">
+            <span></span>
+            <button data-sort="title" class="active">Title ▾</button>
+            <button data-sort="artist">Artist</button>
+            <button data-sort="genre">Genre</button>
+            <button data-sort="bpm">BPM</button>
+            <button data-sort="key">Key</button>
+            <button data-sort="energy">Energy</button>
+            <button data-sort="duration">Time</button>
+          </div>
+          <div id="grid-rows"></div>
+          <div class="gridfoot">
+            <span id="foot-range">0–0 of 0</span>
+            <span class="pg"><button id="pg-prev" class="btn">Prev</button><button id="pg-next" class="btn">Next</button></span>
           </div>
         </div>
-        <p class="hint">One transition per line, with exact timecodes. Example:
-          <code>mix track 4 into track 3 at track 3 1:24 / track 4 0:23</code> · add <code>bass swap</code> or <code>crossfade 8s</code> to a line.</p>
-        <textarea id="mixscript" rows="3" placeholder="mix track 2 into track 1 at track 1 1:24 / track 2 0:23"></textarea>
-        <p id="render-status" class="hint"></p>
-        <div id="script-warnings"></div>
-        <div id="script-plan"></div>
-        <audio id="preview-audio" preload="auto"></audio>
-      </div>
-    </section>
 
-    <!-- ============================ CURATOR =========================== -->
-    <section id="tab-curator" class="panel">
-      <div class="panel-head">
-        <div>
-          <h1>AI Curator</h1>
-          <p class="sub">Describe the set you want — it's built from your analysed library.</p>
+        <!-- Set pane -->
+        <div id="pane-set" class="setlist hidden"></div>
+
+        <!-- Player dock -->
+        <div class="dock">
+          <button id="pl-play" class="playbtn">▶</button>
+          <span id="pl-title" class="ptitle">—</span>
+          <div id="pl-wave" class="wave"></div>
+          <span id="pl-time" class="ptime mono">0:00 / 0:00</span>
+          <select id="pl-device" title="Output device"><option>Default output</option></select>
+          <button id="pl-audition" class="btn">Audition ⏭</button>
+          <audio id="audio" preload="auto"></audio>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="curator-grid">
-        <div class="curator-input">
-          <label>Describe the playlist</label>
-          <textarea id="curate-desc" rows="5" placeholder="e.g. Sunset rooftop warm-up. Deep, warm house, slowly building energy, nothing too vocal. Smooth key changes."></textarea>
-          <div class="row">
-            <label>Target length (minutes, optional)
-              <input id="curate-minutes" type="number" min="5" max="480" placeholder="60" />
-            </label>
-          </div>
-          <button id="btn-curate" class="primary">Curate playlist</button>
-          <p id="curate-status" class="hint"></p>
-        </div>
-
-        <div class="curator-output">
-          <div id="curate-reasoning" class="reasoning hidden"></div>
-          <ul id="curate-result" class="track-list"></ul>
-          <button id="btn-load-mix" class="primary hidden">Load into Mix Builder</button>
-        </div>
+  <!-- ============================ SETTINGS MODAL ============================ -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="box">
+      <div class="mhead">
+        <h2>Keys &amp; connection</h2>
+        <button id="settings-close" class="btn">Close</button>
       </div>
-    </section>
-
-    <!-- ============================ SETTINGS ========================== -->
-    <section id="tab-settings" class="panel">
-      <div class="panel-head"><h1>Settings</h1></div>
-
-      <div class="settings-card">
-        <h3>Google Drive</h3>
-        <p class="hint">The app signs into your Google Drive to read the folder you nominate. Enter an OAuth client (from Google Cloud Console → Credentials → OAuth client ID → Desktop app).</p>
-        <label>OAuth client ID <input id="set-gid" type="text" placeholder="xxxxx.apps.googleusercontent.com" /></label>
-        <label>OAuth client secret <input id="set-gsecret" type="password" placeholder="(hidden — leave blank to keep existing)" /></label>
-        <div class="actions">
-          <button id="btn-save-google" class="ghost">Save client</button>
-          <button id="btn-connect" class="primary">Connect Google Drive</button>
-          <button id="btn-disconnect" class="ghost hidden">Disconnect</button>
-          <span id="drive-state" class="state">Not connected</span>
+      <div class="mbody">
+        <div class="field">
+          <label>Google OAuth client ID</label>
+          <input id="set-gid" type="text" placeholder="xxxxx.apps.googleusercontent.com" />
         </div>
-
-        <div class="folder-picker">
-          <label>Nominated folder</label>
-          <div class="row">
-            <input id="folder-search" type="text" placeholder="Search folder by name…" />
-            <button id="btn-folder-search" class="ghost">Search</button>
-          </div>
-          <ul id="folder-results" class="folder-list"></ul>
-          <p class="hint" id="selected-folder">None selected</p>
+        <div class="field">
+          <label>Google OAuth client secret</label>
+          <input id="set-gsecret" type="password" placeholder="(hidden — leave blank to keep)" />
         </div>
-
-        <div class="folder-picker">
-          <label>Finished-mixes destination folder (where "Save to Drive" uploads)</label>
-          <div class="row">
-            <input id="mixes-folder-search" type="text" placeholder="Search destination folder by name…" />
-            <button id="btn-mixes-folder-search" class="ghost">Search</button>
-          </div>
-          <ul id="mixes-folder-results" class="folder-list"></ul>
-          <p class="hint" id="selected-mixes-folder">None selected — finished mixes save locally until set. A “project-mixes” subfolder is created inside it automatically.</p>
+        <div class="field">
+          <label>Anthropic API key (optional)</label>
+          <input id="set-akey" type="password" placeholder="sk-ant-… (leave blank to keep)" />
         </div>
-      </div>
-
-      <div class="settings-card">
-        <h3>Anthropic (AI Curator)</h3>
-        <p class="hint">Paste your Anthropic API key. Stored encrypted on this machine and never leaves it except to call the Claude API.</p>
-        <label>API key <input id="set-akey" type="password" placeholder="sk-ant-… (leave blank to keep existing)" /></label>
-        <label>Model
+        <div class="field">
+          <label>Model</label>
           <select id="set-model">
-            <option value="claude-opus-4-8">Claude Opus 4.8 (best)</option>
+            <option value="claude-opus-4-8">Claude Opus 4.8</option>
             <option value="claude-sonnet-5">Claude Sonnet 5</option>
-            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (fast/cheap)</option>
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
           </select>
-        </label>
-        <div class="actions">
-          <button id="btn-save-anthropic" class="ghost">Save</button>
-          <span id="ai-state" class="state">No key</span>
+        </div>
+        <div class="field">
+          <label>Beatmatch warn threshold (%)</label>
+          <input id="set-warn" type="number" min="1" max="20" value="6" />
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="settings-save" class="btn pri">Save</button>
+          <button id="settings-clearcache" class="btn danger">Clear analysis cache</button>
         </div>
       </div>
-
-      <div class="settings-card">
-        <h3>Mixing preferences</h3>
-        <label>Smooth BPM tolerance (± BPM considered an easy beatmatch)
-          <input id="set-bpmtol" type="number" min="1" max="20" value="6" />
-        </label>
-        <label>Transition crossfade length (seconds) — used when you audition a transition
-          <input id="set-xfade" type="number" min="1" max="30" value="8" />
-        </label>
-        <div class="actions">
-          <button id="btn-save-prefs" class="ghost">Save</button>
-          <button id="btn-clear-cache" class="danger">Clear analysis cache</button>
-        </div>
-      </div>
-
-      <div class="settings-card">
-        <h3>Analysis engine</h3>
-        <p class="hint">librosa is built in and needs no extra setup. Essentia adds pro-grade key/BPM and optional ML genre tagging but must be installed separately (<code>pip install -r requirements-optional.txt</code>).</p>
-        <label>Engine
-          <select id="set-engine">
-            <option value="librosa">librosa (built in)</option>
-            <option value="essentia">Essentia (if installed)</option>
-          </select>
-        </label>
-        <label>Essentia genre model path (optional)
-          <input id="set-genremodel" type="text" placeholder="C:\\models\\genre_discogs400.pb" />
-        </label>
-        <p class="hint">Essentia detected: <span id="essentia-state" class="state">checking…</span></p>
-        <div class="actions"><button id="btn-save-engine" class="ghost">Save</button></div>
-      </div>
-
-      <div class="settings-card">
-        <h3>Stem separation <span class="badge">experimental</span></h3>
-        <p class="hint">Split a track into vocals / drums / bass / other using Demucs (great for acapellas &amp; instrumentals). Requires <code>pip install demucs</code> and is much faster on a GPU. Separated stems are written to your data folder.</p>
-        <label>Demucs model
-          <select id="set-stemmodel">
-            <option value="htdemucs">htdemucs (balanced)</option>
-            <option value="htdemucs_ft">htdemucs_ft (best, slower)</option>
-            <option value="mdx_extra">mdx_extra</option>
-          </select>
-        </label>
-        <p class="hint">Demucs detected: <span id="stems-state" class="state">checking…</span></p>
-        <div class="actions"><button id="btn-save-stems" class="ghost">Save</button></div>
-      </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
   <div id="toast" class="toast hidden"></div>
   <script src="app.js"></script>

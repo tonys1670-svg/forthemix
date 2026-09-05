@@ -14,9 +14,9 @@ demucs==4.0.1
 # sounddevice: enumerate OS audio output devices for the output-device picker.
 sounddevice==0.4.7
 
-# pyrubberband: high-quality, pitch-preserving time-stretch for beatmatched mix
-# rendering. Needs the RubberBand CLI on PATH (Windows: bundle rubberband.exe;
-# macOS: `brew install rubberband`; Linux: `apt install rubberband-cli`).
-# Without it, mix rendering falls back to librosa's phase vocoder automatically.
-pyrubberband==0.3.0
+# NOTE: pyrubberband is now a base dependency (requirements.txt) and the Windows
+# installer bundles the RubberBand CLI, so beatmatched rendering works out of the
+# box on Windows. On macOS/Linux dev, also install the CLI for best quality:
+#   macOS: `brew install rubberband`  ·  Linux: `apt install rubberband-cli`
+# Without the CLI, rendering falls back to librosa's phase vocoder automatically.
 

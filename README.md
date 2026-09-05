@@ -231,7 +231,9 @@ companion talk to the same API). Additive routes for the redesigned UI are marke
 - ✚ `POST /api/mixplan/preview` — `{ track_ids, instruction, beatmatch }` → a short rendered WAV of that one transition, to audition the blend.
 - ✚ `POST /api/mixplan/render` — `{ track_ids, instructions, name, beatmatch }` → renders the whole continuous mix in the background (see `GET /api/mixplan/render/status`, then `GET /api/mixplan/render/file`). Output WAV lands in the Mixes folder.
 
-The renderer runs the mix at a **constant reference tempo** (the first track's BPM), time-stretching each track to lock beats (pitch preserved via **RubberBand** when installed, else a librosa phase-vocoder fallback), with equal-power crossfades or an **EQ bass-swap**. A beatmatch that needs more than the warn threshold (default **6%**, in Settings) raises a warning with choices before you commit.
+The renderer runs the mix at a **constant reference tempo** (the first track's BPM), time-stretching each track to lock beats (pitch preserved via **RubberBand** — **bundled in the Windows installer**, so it works out of the box; otherwise a librosa phase-vocoder fallback), with equal-power crossfades or an **EQ bass-swap**. A beatmatch that needs more than the warn threshold (default **6%**, in Settings) raises a warning with choices before you commit.
+
+> The Windows build's CI step downloads the RubberBand CLI into `vendor/rubberband/`, PyInstaller bundles it beside the app, and it's put on `PATH` at startup. For dev on macOS/Linux, install the CLI (`brew install rubberband` / `apt install rubberband-cli`) for the same quality — without it, rendering uses the automatic librosa fallback.
 
 ## Accuracy notes (honest limitations)
 
