@@ -368,7 +368,8 @@ $("#btn-export").addEventListener("click", async () => {
 
 /* ---- set pane ---- */
 function renderSet() {
-  const box = $("#pane-set");
+  const box = $("#seq-list");
+  $("#mixscript").classList.toggle("hidden", S.mix.length < 2);
   if (!S.mix.length) {
     box.innerHTML = '<div class="empty-seq"><h3>Empty sequence</h3><p>Add tracks from the library — transition scores appear between them.</p></div>';
     return;
@@ -411,6 +412,81 @@ $("#pane-set").addEventListener("click", async (e) => {
   } else return;
   await saveMix(); await rescore(); renderSet(); renderMetrics(); renderArc(); loadLibrary();
 });
+
+/* ---- mix script (timecoded transitions -> beatmatched render) ---- */
+function fmtTC(s) { if (s == null) return "—"; s = Math.round(s); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+
+$("#ms-parse").addEventListener("click", async () => {
+  if (S.mix.length < 2) return toast("Add at least 2 tracks");
+  const text = ($("#ms-text").value || "").trim();
+  if (!text) return toast("Write a transition line first");
+  try {
+    const res = await api("/api/mixplan/parse", { method: "POST", body: JSON.stringify({ text, track_ids: S.mix }) });
+    S.mixPlan = res.instructions || [];
+    renderPlan(res.instructions || [], res.warnings || []);
+    $("#ms-status").textContent = `Parsed ${S.mixPlan.length} transition${S.mixPlan.length === 1 ? "" : "s"}`;
+  } catch (e) { toast(e.message); }
+});
+
+function renderPlan(instructions, warnings) {
+  $("#ms-warnings").innerHTML = warnings.map((w) =>
+    `<div class="ms-warn ${w.kind === "key" ? "key" : ""}">⚠ ${esc(w.message)}` +
+    (w.options && w.options.length ? `<div class="opts">${w.options.map(esc).join(" · ")}</div>` : "") + `</div>`).join("");
+  $("#ms-plan").innerHTML = instructions.map((ins, i) => {
+    const a = S.tracks[S.mix[ins.from_index - 1]], b = S.tracks[S.mix[ins.to_index - 1]];
+    const an = a ? a.name : `track ${ins.from_index}`, bn = b ? b.name : `track ${ins.to_index}`;
+    return `<div class="ms-planrow">
+      <span class="pl-grow"><span class="pl-label">${esc(bn)} → ${esc(an)}</span>
+        <span class="pl-tc"> @ ${fmtTC(ins.from_out_sec)} → ${fmtTC(ins.to_in_sec)}</span></span>
+      ${ins.technique === "eq_bass_swap" ? '<span class="ms-tech">bass swap</span>' : ""}
+      <button class="btn" data-preview="${i}">Audition ⏭</button>
+    </div>`;
+  }).join("");
+}
+
+$("#ms-plan").addEventListener("click", async (e) => {
+  const i = e.target.dataset.preview; if (i === undefined) return;
+  const ins = (S.mixPlan || [])[+i]; if (!ins) return;
+  $("#ms-status").textContent = "Rendering preview…";
+  try {
+    const res = await fetch("/api/mixplan/preview", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ track_ids: S.mix, instruction: ins, beatmatch: $("#ms-beatmatch").checked }) });
+    if (!res.ok) throw new Error((await res.json()).detail || "Preview failed");
+    const blob = await res.blob(); const pa = $("#ms-preview"); pa.src = URL.createObjectURL(blob); pa.play();
+    $("#ms-status").textContent = "Playing transition preview";
+  } catch (err) { toast(err.message); $("#ms-status").textContent = ""; }
+});
+
+$("#ms-render").addEventListener("click", async () => {
+  if (S.mix.length < 2) return toast("Add at least 2 tracks");
+  const name = prompt("Name this rendered mix:", "My set"); if (!name) return;
+  S.renderName = name;
+  try {
+    await api("/api/mixplan/render", { method: "POST", body: JSON.stringify({
+      track_ids: S.mix, instructions: S.mixPlan || [], name, beatmatch: $("#ms-beatmatch").checked }) });
+    $("#ms-status").textContent = "Rendering… this can take a little while";
+    pollRender();
+  } catch (e) { toast(e.message); }
+});
+
+function pollRender() {
+  clearInterval(S.renderTimer);
+  S.renderTimer = setInterval(async () => {
+    let st; try { st = await api("/api/mixplan/render/status"); } catch (e) { return; }
+    if (st.running) { $("#ms-status").textContent = (st.message || "Rendering…"); return; }
+    clearInterval(S.renderTimer);
+    if (st.phase === "error") { $("#ms-status").textContent = ""; return toast(st.error || "Render failed"); }
+    if (st.phase === "done") {
+      $("#ms-status").textContent = "Rendered ✓ — downloading";
+      try {
+        const res = await fetch("/api/mixplan/render/file"); const blob = await res.blob();
+        const url = URL.createObjectURL(blob); const a = document.createElement("a");
+        a.href = url; a.download = (S.renderName || "mix") + ".wav"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        toast("Mix rendered & downloaded");
+      } catch (e) { toast("Rendered, but download failed"); }
+    }
+  }, 900);
+}
 
 /* ---- player dock ---- */
 const audio = $("#audio");
