@@ -29,6 +29,8 @@ class Track(BaseModel):
     analyzed: bool = False
     peaks: Optional[list[float]] = None   # waveform peaks for the player
     error: Optional[str] = None
+    # Fields the user hand-corrected; re-analysis must not overwrite these.
+    user_edited: list[str] = []
 
 
 class TransitionComment(BaseModel):

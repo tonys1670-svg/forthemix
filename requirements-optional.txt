@@ -10,3 +10,6 @@ essentia==2.1b6.dev1110 ; platform_system != "Windows"
 # PyTorch (~1-2 GB) and downloads a ~300 MB model on first run. A GPU is
 # strongly recommended (CPU works but is ~real-time-slow).
 demucs==4.0.1
+
+# sounddevice: enumerate OS audio output devices for the output-device picker.
+sounddevice==0.4.7

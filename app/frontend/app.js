@@ -157,11 +157,13 @@ function pollAnalysis() {
   state.pollTimer = setInterval(async () => {
     let st;
     try { st = await api("/api/analyze/status"); } catch (e) { return; }
-    const pct = st.total ? Math.round((st.current / st.total) * 100) : 0;
+    // `done` is the count; `current` is the filename being analysed (new shape).
+    const doneCount = (st.done != null ? st.done : st.current) || 0;
+    const pct = st.total ? Math.round((doneCount / st.total) * 100) : 0;
     $("#progress-fill").style.width = pct + "%";
     $("#progress-text").textContent =
       st.phase === "done" ? st.message
-      : `${st.phase} — ${st.current}/${st.total} · ${st.message || ""}`;
+      : `${st.phase} — ${doneCount}/${st.total} · ${st.current || st.message || ""}`;
     if (!st.running && (st.phase === "done" || st.phase === "error")) {
       clearInterval(state.pollTimer);
       if (st.phase === "error") toast(st.error || "Analysis failed", "err");
