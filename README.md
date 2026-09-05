@@ -16,6 +16,7 @@ music library.
 | **AI Curator** | Describe the vibe ("sunset rooftop, warm house, building energy, ~60 min") and Claude assembles an ordered, harmonically sensible playlist from your analysed library. |
 | **Saved mixes** | Name and save mixes; they persist between sessions and reload with one click. |
 | **Crossfade audition** | The player crossfades the tail of one track into the head of the next (length set in Settings) so you hear the blend, not a hard cut. |
+| **Mix script** | Describe transitions in plain English with exact timecodes ("mix track 4 into track 3 at track 3 1:24 / track 4 0:23"); the app beatmatches, warns on big stretches/key clashes, auditions each transition, and renders a continuous mix (crossfade or EQ bass-swap). |
 | **Stem separation** *(optional)* | Split a track into vocals / drums / bass / other with Demucs — handy for acapellas & instrumentals. |
 | **Export** | Save the finished mix as an **M3U playlist** (download, or straight into your Mixes folder). |
 
@@ -224,6 +225,13 @@ companion talk to the same API). Additive routes for the redesigned UI are marke
 **Mixing** (unchanged scoring — the UI mirrors these exactly)
 - `POST /api/transitions` — score a sequence (harmonic/tempo/energy). **Weights and thresholds are fixed.**
 - ✚ `GET /api/mix` / `PUT /api/mix` — the shared current mix sequence (desktop ⇄ mobile), persisted in `cache.db`.
+
+**Mix script — timecoded transitions → beatmatched render**
+- ✚ `POST /api/mixplan/parse` — `{ text, track_ids }` → `{ instructions[], warnings[] }`. Describe transitions in plain English with **explicit timecodes**, one per line, e.g. `mix track 4 into track 3 at track 3 1:24 / track 4 0:23` (add `bass swap` or `crossfade 8s`). Warnings flag big beatmatch stretches and key clashes with options.
+- ✚ `POST /api/mixplan/preview` — `{ track_ids, instruction, beatmatch }` → a short rendered WAV of that one transition, to audition the blend.
+- ✚ `POST /api/mixplan/render` — `{ track_ids, instructions, name, beatmatch }` → renders the whole continuous mix in the background (see `GET /api/mixplan/render/status`, then `GET /api/mixplan/render/file`). Output WAV lands in the Mixes folder.
+
+The renderer runs the mix at a **constant reference tempo** (the first track's BPM), time-stretching each track to lock beats (pitch preserved via **RubberBand** when installed, else a librosa phase-vocoder fallback), with equal-power crossfades or an **EQ bass-swap**. A beatmatch that needs more than the warn threshold (default **6%**, in Settings) raises a warning with choices before you commit.
 
 ## Accuracy notes (honest limitations)
 

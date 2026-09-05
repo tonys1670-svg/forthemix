@@ -379,6 +379,98 @@ async function separateStems(id, twoStems) {
   } catch (e) { toast(e.message, "err"); }
 }
 
+/* ------------------------- mix script (timecoded transitions) ------------------------- */
+function fmtTC(s) { if (s == null) return "—"; s = Math.round(s); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+
+$("#btn-parse-script").addEventListener("click", async () => {
+  if (state.mix.length < 2) return toast("Add at least 2 tracks to the mix first", "err");
+  const text = ($("#mixscript").value || "").trim();
+  if (!text) return toast("Write at least one transition line", "err");
+  try {
+    const res = await api("/api/mixplan/parse", { method: "POST", body: JSON.stringify({ text, track_ids: state.mix }) });
+    state.mixPlan = res.instructions || [];
+    renderPlan(res.instructions || [], res.warnings || []);
+    toast(`Parsed ${state.mixPlan.length} transition(s)`, "ok");
+  } catch (e) { toast(e.message, "err"); }
+});
+
+function renderPlan(instructions, warnings) {
+  $("#script-warnings").innerHTML = warnings.map((x) =>
+    `<div class="mix-warn ${x.kind === "key" ? "key" : ""}">⚠️ ${esc(x.message)}` +
+    (x.options && x.options.length ? `<div class="opts">Options: ${x.options.map(esc).join(" · ")}</div>` : "") +
+    `</div>`).join("");
+  $("#script-plan").innerHTML = instructions.map((ins, i) => {
+    const a = state.tracks[state.mix[ins.from_index - 1]];
+    const b = state.tracks[state.mix[ins.to_index - 1]];
+    const an = a ? a.name : `track ${ins.from_index}`;
+    const bn = b ? b.name : `track ${ins.to_index}`;
+    return `<div class="plan-row">
+      <span class="grow"><b>${esc(bn)}</b> into <b>${esc(an)}</b>
+        <span class="tc">@ ${fmtTC(ins.from_out_sec)} → ${fmtTC(ins.to_in_sec)}</span>
+        ${ins.technique === "eq_bass_swap" ? '<span class="badge">bass swap</span>' : ""}</span>
+      <button class="mini" data-preview="${i}">▶ audition</button>
+    </div>`;
+  }).join("");
+}
+
+$("#script-plan").addEventListener("click", async (e) => {
+  const i = e.target.dataset.preview;
+  if (i === undefined) return;
+  const ins = (state.mixPlan || [])[+i];
+  if (!ins) return;
+  toast("Rendering transition preview…");
+  try {
+    const res = await fetch("/api/mixplan/preview", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ track_ids: state.mix, instruction: ins, beatmatch: $("#beatmatch-toggle").checked }),
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || "Preview failed");
+    const blob = await res.blob();
+    const pa = $("#preview-audio");
+    pa.src = URL.createObjectURL(blob);
+    pa.play();
+    toast("Playing transition preview", "ok");
+  } catch (err) { toast(err.message, "err"); }
+});
+
+$("#btn-render-mix").addEventListener("click", async () => {
+  if (state.mix.length < 2) return toast("Add at least 2 tracks", "err");
+  const name = prompt("Name this rendered mix:", "My set");
+  if (!name) return;
+  state.renderName = name;
+  try {
+    await api("/api/mixplan/render", { method: "POST", body: JSON.stringify({
+      track_ids: state.mix, instructions: state.mixPlan || [], name, beatmatch: $("#beatmatch-toggle").checked,
+    })});
+    $("#render-status").textContent = "Rendering… this can take a little while.";
+    pollRender();
+  } catch (e) { toast(e.message, "err"); }
+});
+
+function pollRender() {
+  clearInterval(state.renderTimer);
+  state.renderTimer = setInterval(async () => {
+    let st;
+    try { st = await api("/api/mixplan/render/status"); } catch (e) { return; }
+    if (st.running) { $("#render-status").textContent = st.message || "Rendering…"; return; }
+    clearInterval(state.renderTimer);
+    if (st.phase === "error") { $("#render-status").textContent = ""; return toast(st.error || "Render failed", "err"); }
+    if (st.phase === "done") {
+      $("#render-status").textContent = "Rendered ✓ — downloading…";
+      try {
+        const res = await fetch("/api/mixplan/render/file");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const aEl = document.createElement("a");
+        aEl.href = url; aEl.download = (state.renderName || "mix") + ".wav";
+        document.body.appendChild(aEl); aEl.click(); aEl.remove();
+        URL.revokeObjectURL(url);
+        toast("Mix rendered & downloaded", "ok");
+      } catch (e) { toast("Rendered, but download failed: " + e.message, "err"); }
+    }
+  }, 800);
+}
+
 /* ------------------------- audio player ------------------------- */
 const audio = $("#audio");
 const canvas = $("#waveform");

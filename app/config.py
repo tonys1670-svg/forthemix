@@ -84,6 +84,8 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "stem_model": "htdemucs",        # Demucs model used for stem separation
     "audio_device_id": "",           # selected OS audio output device (index/id)
     "audio_device_name": "",
+    "beatmatch_warn_pct": 6,         # warn if a beatmatch needs > this % tempo change
+    "mix_render_sr": 44100,          # sample rate for rendered mixes
 }
 
 

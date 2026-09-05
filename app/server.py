@@ -13,7 +13,8 @@ from pydantic import BaseModel
 
 from . import config, db, drive, export
 from .curator import curate
-from .jobs import job
+from .jobs import job, render_job
+from .mixplan import MixInstruction, beatmatch_warnings, parse_script
 from .models import CurationRequest, SavedMix, Track
 from .transitions import score_sequence, score_transition
 
@@ -573,6 +574,95 @@ def separate_stems(body: StemIn) -> dict:
         return stems.separate(Path(t.local_path), model=model, two_stems=body.two_stems)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Stem separation failed: {exc}")
+
+
+# --------------------------------------------------------------------------- #
+# Mix script — natural-language, timecoded transitions -> render / preview
+# --------------------------------------------------------------------------- #
+class MixScriptIn(BaseModel):
+    text: str
+    track_ids: list[str]
+
+
+@app.post("/api/mixplan/parse")
+def mixplan_parse(body: MixScriptIn) -> dict:
+    tracks = [db.get_track(t) for t in body.track_ids]
+    tracks = [t for t in tracks if t]
+    instructions, warnings = parse_script(body.text, len(tracks))
+    warn_pct = config.load_settings().get("beatmatch_warn_pct", 6)
+    warnings = warnings + beatmatch_warnings(tracks, instructions, warn_pct)
+    return {
+        "track_ids": body.track_ids,
+        "instructions": [i.model_dump() for i in instructions],
+        "warnings": [w.model_dump() for w in warnings],
+    }
+
+
+class MixPreviewIn(BaseModel):
+    track_ids: list[str]
+    instruction: MixInstruction
+    beatmatch: bool = True
+
+
+@app.post("/api/mixplan/preview")
+def mixplan_preview(body: MixPreviewIn):
+    tracks = [db.get_track(t) for t in body.track_ids]
+    fi, ti = body.instruction.from_index - 1, body.instruction.to_index - 1
+    if not (0 <= fi < len(tracks) and 0 <= ti < len(tracks)) or not tracks[fi] or not tracks[ti]:
+        raise HTTPException(status_code=400, detail="Transition refers to a track that isn't loaded.")
+    a, b = tracks[fi], tracks[ti]
+    for t in (a, b):
+        if not (t.local_path and Path(t.local_path).exists()):
+            raise HTTPException(status_code=400, detail=f"Audio for “{t.name}” isn't available locally.")
+    settings = config.load_settings()
+    sr = int(settings.get("mix_render_sr", 44100))
+    cf = settings.get("crossfade_seconds", 8)
+    import tempfile
+
+    from .mixrender import render_segment_to_file
+    dest = Path(tempfile.gettempdir()) / f"ftm_preview_{a.id}_{b.id}.wav"
+    try:
+        render_segment_to_file(a, b, body.instruction, dest, sr=sr, default_cf=cf, beatmatch=body.beatmatch)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Preview render failed: {exc}")
+    return FileResponse(str(dest), media_type="audio/wav", filename="preview.wav")
+
+
+class MixPlanIn(BaseModel):
+    track_ids: list[str]
+    instructions: list[MixInstruction] = []
+    name: Optional[str] = "mix"
+    beatmatch: bool = True
+
+
+@app.post("/api/mixplan/render")
+def mixplan_render(body: MixPlanIn) -> dict:
+    tracks = [db.get_track(t) for t in body.track_ids]
+    if any(t is None for t in tracks) or not tracks:
+        raise HTTPException(status_code=400, detail="One or more tracks are missing.")
+    for t in tracks:
+        if not (t.local_path and Path(t.local_path).exists()):
+            raise HTTPException(status_code=400, detail=f"Audio for “{t.name}” isn't available locally.")
+    settings = config.load_settings()
+    sr = int(settings.get("mix_render_sr", 44100))
+    cf = settings.get("crossfade_seconds", 8)
+    name = export._safe_name(body.name or "mix")
+    started = render_job.start(tracks, body.instructions, name, sr, cf, body.beatmatch)
+    return {"started": started, "state": render_job.state}
+
+
+@app.get("/api/mixplan/render/status")
+def mixplan_render_status() -> dict:
+    return render_job.state
+
+
+@app.get("/api/mixplan/render/file")
+def mixplan_render_file():
+    state = render_job.state
+    path = state.get("file")
+    if not path or not Path(path).exists():
+        raise HTTPException(status_code=404, detail="No rendered mix available yet.")
+    return FileResponse(path, media_type="audio/wav", filename=Path(path).name)
 
 
 # --------------------------------------------------------------------------- #
