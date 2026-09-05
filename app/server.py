@@ -84,6 +84,8 @@ class SettingsIn(BaseModel):
     essentia_genre_model: Optional[str] = None
     crossfade_seconds: Optional[int] = None
     stem_model: Optional[str] = None
+    theme: Optional[str] = None
+    density: Optional[str] = None
 
 
 @app.post("/api/settings")
@@ -105,6 +107,10 @@ def update_settings(body: SettingsIn) -> dict:
         updates["crossfade_seconds"] = max(1, min(30, int(body.crossfade_seconds)))
     if body.stem_model:
         updates["stem_model"] = body.stem_model.strip()
+    if body.theme in ("dark", "light"):
+        updates["theme"] = body.theme
+    if body.density in ("comfortable", "compact"):
+        updates["density"] = body.density
     if updates:
         config.save_settings(updates)
     if body.anthropic_api_key is not None and body.anthropic_api_key.strip():

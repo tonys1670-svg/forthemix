@@ -16,6 +16,12 @@ google-api-python-client==2.134.0
 google-auth==2.30.0
 google-auth-oauthlib==1.2.0
 
+# Mix rendering: beatmatched time-stretch. pyrubberband drives the bundled
+# RubberBand CLI (rubberband.exe) for pitch-preserving stretch; falls back to
+# librosa automatically if the binary isn't found. scipy powers the EQ bass-swap.
+pyrubberband==0.3.0
+scipy==1.13.1
+
 # AI curation
 anthropic==0.31.2
 

@@ -10,6 +10,7 @@ env/
 build/
 dist/
 *.spec.bak
+vendor/            # fetched at CI time (e.g. RubberBand CLI)
 
 # Local data / secrets (never commit)
 *.enc

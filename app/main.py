@@ -37,7 +37,19 @@ def run_server(host: str, port: int) -> None:
     uvicorn.run(app, host=host, port=port, log_level="warning")
 
 
+def _setup_bundled_binaries() -> None:
+    """Put bundled CLI tools (RubberBand) on PATH so pyrubberband can find them."""
+    import os
+
+    from . import config
+    for sub in ("rubberband", ""):
+        d = str(config.resource_path(sub)) if sub else str(config.resource_path())
+        if os.path.isdir(d):
+            os.environ["PATH"] = d + os.pathsep + os.environ.get("PATH", "")
+
+
 def main() -> None:
+    _setup_bundled_binaries()
     host, port = "127.0.0.1", _free_port()
     server_thread = threading.Thread(target=run_server, args=(host, port), daemon=True)
     server_thread.start()
