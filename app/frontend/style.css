@@ -257,6 +257,25 @@ body.compact .rtitle { font-size: 13px; }
 .field { display: grid; gap: 6px; }
 .field label { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ink2); }
 
+/* Mix script panel (in the design's brutalist language) */
+.mixscript { margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--ink); }
+.ms-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.ms-head h2 { font-family: var(--disp); font-weight: 900; font-size: 22px; letter-spacing: -.6px; text-transform: uppercase; margin: 0; }
+.ms-grow { flex: 1; }
+.ms-beat { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink2); }
+.mixscript textarea { width: 100%; }
+.ms-hint { font-family: var(--mono); font-size: 10.5px; letter-spacing: .6px; text-transform: uppercase; color: var(--ink2); line-height: 1.6; margin: 8px 0; }
+.ms-hint b { color: var(--ink); }
+.ms-warn { border-left: 6px solid var(--risky); background: var(--panel2); padding: 10px 14px; margin: 8px 0; font-family: var(--mono); font-size: 12px; }
+.ms-warn.key { border-left-color: var(--clash); }
+.ms-warn .opts { color: var(--ink2); font-size: 10.5px; text-transform: uppercase; letter-spacing: .8px; margin-top: 5px; }
+.ms-planrow { display: flex; align-items: center; gap: 12px; background: var(--panel); border: 2px solid var(--ink); box-shadow: var(--shadow); padding: 12px 14px; margin: 8px 0; }
+.ms-planrow .pl-grow { flex: 1; min-width: 0; }
+.ms-planrow .pl-label { font-family: var(--disp); font-weight: 700; font-size: 14px; }
+.ms-planrow .pl-tc { font-family: var(--mono); font-weight: 700; font-size: 12px; color: var(--acidtext); }
+.ms-tech { font-family: var(--mono); font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; background: var(--acid); color: var(--acidink); padding: 2px 7px; }
+.ms-status { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink2); }
+
 /* Toast */
 .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: var(--bg);
   font-family: var(--mono); font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
