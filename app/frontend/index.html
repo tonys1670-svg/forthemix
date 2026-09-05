@@ -104,6 +104,25 @@
         </div>
         <audio id="audio" preload="auto"></audio>
       </div>
+
+      <!-- Mix script: timecoded transitions -> preview & render -->
+      <div class="mixscript">
+        <div class="panel-head compact">
+          <h2>Mix script <span class="count" style="background:var(--bg-3);color:var(--muted)">timecoded</span></h2>
+          <div class="actions">
+            <label class="inline"><input type="checkbox" id="beatmatch-toggle" checked /> Beatmatch</label>
+            <button id="btn-parse-script" class="ghost">Parse</button>
+            <button id="btn-render-mix" class="primary">Render mix</button>
+          </div>
+        </div>
+        <p class="hint">One transition per line, with exact timecodes. Example:
+          <code>mix track 4 into track 3 at track 3 1:24 / track 4 0:23</code> · add <code>bass swap</code> or <code>crossfade 8s</code> to a line.</p>
+        <textarea id="mixscript" rows="3" placeholder="mix track 2 into track 1 at track 1 1:24 / track 2 0:23"></textarea>
+        <p id="render-status" class="hint"></p>
+        <div id="script-warnings"></div>
+        <div id="script-plan"></div>
+        <audio id="preview-audio" preload="auto"></audio>
+      </div>
     </section>
 
     <!-- ============================ CURATOR =========================== -->

@@ -232,3 +232,47 @@ class AnalysisJob:
 
 
 job = AnalysisJob()
+
+
+class MixRenderJob:
+    """Background renderer for a full cue-pointed mix (one at a time)."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._state: dict = {"running": False, "phase": "idle", "message": "", "file": None, "error": None}
+        self._thread: Optional[threading.Thread] = None
+
+    @property
+    def state(self) -> dict:
+        with self._lock:
+            return dict(self._state)
+
+    def _set(self, **kw) -> None:
+        with self._lock:
+            self._state.update(kw)
+
+    def start(self, tracks, instructions, name, sr, default_cf, beatmatch) -> bool:
+        with self._lock:
+            if self._state["running"]:
+                return False
+            self._state.update({"running": True, "phase": "rendering",
+                                "message": "Rendering mix…", "file": None, "error": None})
+        self._thread = threading.Thread(
+            target=self._run, args=(tracks, instructions, name, sr, default_cf, beatmatch), daemon=True)
+        self._thread.start()
+        return True
+
+    def _run(self, tracks, instructions, name, sr, default_cf, beatmatch) -> None:
+        from . import config
+        from .mixrender import render_plan_to_file
+        try:
+            dest = config.MIXES_DIR / f"{name}.wav"
+            path = render_plan_to_file(tracks, instructions, dest, sr=sr,
+                                       default_cf=default_cf, beatmatch=beatmatch)
+            self._set(running=False, phase="done", message=f"Rendered {path.name}", file=str(path))
+        except Exception as exc:
+            self._set(running=False, phase="error", error=str(exc), message=f"Render failed: {exc}")
+            traceback.print_exc()
+
+
+render_job = MixRenderJob()

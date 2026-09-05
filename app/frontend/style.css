@@ -204,6 +204,17 @@ code { background: var(--bg-3); padding: 1px 5px; border-radius: 4px; font-size:
 /* crossfade playhead marker on the waveform */
 .xfade-note { color: var(--accent-2); font-size: 12px; }
 
+/* ---------------- Mix script ---------------- */
+.mixscript { margin-top: 16px; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+.mixscript textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 14px; resize: vertical; }
+.mixscript .inline { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.mix-warn { border-left: 3px solid var(--risky); background: var(--bg); border-radius: 0 8px 8px 0; padding: 8px 12px; margin: 6px 0; font-size: 13px; }
+.mix-warn.key { border-left-color: var(--clash); }
+.mix-warn .opts { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.plan-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--bg-3); border: 1px solid var(--line); border-radius: 8px; margin: 6px 0; font-size: 13px; }
+.plan-row .grow { flex: 1; }
+.plan-row .tc { font-variant-numeric: tabular-nums; color: var(--accent-2); }
+
 @media (max-width: 900px) {
   .mix-layout, .curator-grid { grid-template-columns: 1fr; }
 }
