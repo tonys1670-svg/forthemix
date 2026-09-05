@@ -143,3 +143,27 @@ def analyze_file(path: Path, track: Track, energy_scale: int = 10) -> Track:
     track.error = None
     track.analyzed = True
     return track
+
+
+def analyze_track(path: Path, track: Track, settings: dict) -> Track:
+    """Dispatch to the configured analysis engine, falling back to librosa.
+
+    Essentia is used only when selected *and* importable; otherwise we quietly
+    use librosa so analysis never hard-fails on a missing optional dependency.
+    """
+    energy_scale = int(settings.get("energy_scale", 10))
+    engine = settings.get("analysis_engine", "librosa")
+
+    if engine == "essentia":
+        try:
+            from . import essentia_backend
+
+            if essentia_backend.is_available():
+                return essentia_backend.analyze_file(
+                    path, track, energy_scale,
+                    genre_model=settings.get("essentia_genre_model", ""),
+                )
+        except Exception:
+            pass  # fall through to librosa
+
+    return analyze_file(path, track, energy_scale)

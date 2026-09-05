@@ -84,6 +84,13 @@ async function refreshStatus() {
   $("#ai-state").textContent = s.has_anthropic_key ? "Key saved" : "No key";
   $("#ai-state").className = "state " + (s.has_anthropic_key ? "ok" : "");
   $("#selected-folder").textContent = s.drive_folder_name ? `Selected: ${s.drive_folder_name}` : "None selected";
+
+  state.crossfade = s.crossfade_seconds || 8;
+  state.stemsAvailable = !!s.stems_available;
+  const es = $("#essentia-state");
+  if (es) { es.textContent = s.essentia_available ? "installed ✓" : "not installed"; es.className = "state " + (s.essentia_available ? "ok" : ""); }
+  const ss = $("#stems-state");
+  if (ss) { ss.textContent = s.stems_available ? "installed ✓" : "not installed"; ss.className = "state " + (s.stems_available ? "ok" : ""); }
 }
 
 /* ------------------------- library ------------------------- */
@@ -242,6 +249,7 @@ async function renderMix() {
           <button class="mini" data-play="${id}">▶</button>
           <button class="mini" data-up="${id}">↑</button>
           <button class="mini" data-down="${id}">↓</button>
+          ${state.stemsAvailable ? `<button class="mini" data-stems="${id}" title="Separate vocals / instrumental (Demucs)">🎚</button>` : ""}
           <button class="mini" data-rm="${id}">✕</button>
         </div>
       </div>`;
@@ -265,6 +273,7 @@ $("#mix-list").addEventListener("click", (e) => {
   else if (d.up) moveMix(d.up, -1);
   else if (d.down) moveMix(d.down, +1);
   else if (d.rm) removeFromMix(d.rm);
+  else if (d.stems) separateStems(d.stems, "vocals");
   else if (d.audition !== undefined) auditionTransition(parseInt(d.audition, 10));
 });
 
@@ -290,6 +299,69 @@ $("#btn-export").addEventListener("click", async () => {
   } catch (e) { toast(e.message, "err"); }
 });
 
+/* ------------------------- save to Mixes folder ------------------------- */
+$("#btn-save-folder").addEventListener("click", async () => {
+  if (!state.mix.length) return toast("Mix is empty", "err");
+  const name = prompt("Name this mix (saved into your Mixes folder):", "My set");
+  if (!name) return;
+  try {
+    const res = await api("/api/export/save", { method: "POST", body: JSON.stringify({ track_ids: state.mix, name }) });
+    toast("Saved to: " + res.m3u, "ok");
+  } catch (e) { toast(e.message, "err"); }
+});
+
+/* ------------------------- saved mixes (persisted) ------------------------- */
+async function loadSavedMixes() {
+  try {
+    const data = await api("/api/mixes");
+    const sel = $("#saved-mixes");
+    sel.innerHTML = '<option value="">— load a saved mix —</option>' +
+      data.mixes.map((m) => `<option value="${m.id}">${esc(m.name)} (${m.track_ids.length})</option>`).join("");
+  } catch (e) {}
+}
+
+$("#btn-save-mix").addEventListener("click", async () => {
+  if (!state.mix.length) return toast("Add tracks first", "err");
+  const name = prompt("Name this mix:", "My set");
+  if (!name) return;
+  try {
+    await api("/api/mixes", { method: "POST", body: JSON.stringify({ name, track_ids: state.mix }) });
+    toast("Mix saved", "ok");
+    loadSavedMixes();
+  } catch (e) { toast(e.message, "err"); }
+});
+
+$("#btn-load-saved").addEventListener("click", async () => {
+  const id = $("#saved-mixes").value;
+  if (!id) return;
+  try {
+    const m = await api("/api/mixes/" + id);
+    state.mix = m.track_ids.filter((tid) => state.tracks[tid]);
+    renderMix(); renderAvailable(); renderTracks();
+    toast(`Loaded "${m.name}"`, "ok");
+  } catch (e) { toast(e.message, "err"); }
+});
+
+$("#btn-delete-saved").addEventListener("click", async () => {
+  const id = $("#saved-mixes").value;
+  if (!id) return;
+  if (!confirm("Delete this saved mix?")) return;
+  try {
+    await api("/api/mixes/" + id, { method: "DELETE" });
+    toast("Deleted", "ok");
+    loadSavedMixes();
+  } catch (e) { toast(e.message, "err"); }
+});
+
+/* ------------------------- stem separation ------------------------- */
+async function separateStems(id, twoStems) {
+  toast("Separating stems… this can take a while (first run downloads a model).");
+  try {
+    const res = await api("/api/stems", { method: "POST", body: JSON.stringify({ track_id: id, two_stems: twoStems || null }) });
+    toast("Stems saved to: " + res.folder, "ok");
+  } catch (e) { toast(e.message, "err"); }
+}
+
 /* ------------------------- audio player ------------------------- */
 const audio = $("#audio");
 const canvas = $("#waveform");
@@ -299,6 +371,16 @@ async function playTrack(id, seekRatio = 0) {
   if (!t) return;
   state.player.id = id;
   state.player.auditionNext = null;
+  // reset any crossfade state so a normal play is at full volume
+  if (actx) {
+    try {
+      if (actx.state === "suspended") actx.resume();
+      clearInterval(xfadeTimer);
+      gainA.gain.cancelScheduledValues(actx.currentTime); gainA.gain.value = 1;
+      if (gainB) gainB.gain.value = 0;
+      if (audioB) audioB.pause();
+    } catch (e) {}
+  }
   $("#player").classList.remove("hidden");
   $("#pl-title").textContent = (t.artist ? t.artist + " – " : "") + t.name;
   audio.src = `/api/audio/${id}`;
@@ -379,20 +461,82 @@ $("#pl-audition").addEventListener("click", () => {
   else toast("Play a mix track first, then audition into the next.", "");
 });
 
+/* ---- crossfade audition (Web Audio) ---- */
+let audioB = null, actx = null, gainA = null, gainB = null, xfadeTimer = null;
+
+function initWebAudio() {
+  if (actx) return true;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    actx = new AC();
+    audioB = document.createElement("audio");
+    audioB.preload = "auto";
+    document.body.appendChild(audioB);
+    const srcA = actx.createMediaElementSource(audio);
+    const srcB = actx.createMediaElementSource(audioB);
+    gainA = actx.createGain(); gainB = actx.createGain();
+    srcA.connect(gainA).connect(actx.destination);
+    srcB.connect(gainB).connect(actx.destination);
+    gainA.gain.value = 1; gainB.gain.value = 0;
+    return true;
+  } catch (e) { actx = null; return false; }
+}
+
 function auditionTransition(i) { auditionByIndex(i); }
 
+// Play the tail of the outgoing track and crossfade into the head of the next,
+// so you actually hear how the blend sounds — length is the Settings crossfade.
 function auditionByIndex(i) {
   const fromId = state.mix[i], toId = state.mix[i + 1];
   if (!fromId || !toId) return;
-  // Play the last ~12 seconds of the outgoing track, then roll into the next.
+  const xf = state.crossfade || 8;
+
+  if (!initWebAudio()) return fallbackAudition(fromId, toId);  // no Web Audio -> hard cut
+  if (actx.state === "suspended") actx.resume();
+
+  clearInterval(xfadeTimer);
+  gainA.gain.cancelScheduledValues(actx.currentTime); gainA.gain.value = 1;
+  gainB.gain.cancelScheduledValues(actx.currentTime); gainB.gain.value = 0;
+  audioB.src = `/api/audio/${toId}`;
+  audioB.pause(); try { audioB.currentTime = 0; } catch (e) {}
+
+  playTrack(fromId).then(() => {
+    let started = false;
+    const arm = () => {
+      if (!(audio.duration && isFinite(audio.duration))) { setTimeout(arm, 150); return; }
+      const cutAt = Math.max(0, audio.duration - xf);
+      audio.currentTime = Math.max(0, audio.duration - xf - 2);  // jump near the end
+      $("#pl-title").textContent = "Auditioning transition…";
+      xfadeTimer = setInterval(() => {
+        if (!started && audio.currentTime >= cutAt) {
+          started = true;
+          const t0 = actx.currentTime;
+          audioB.play().catch(() => {});
+          gainA.gain.setValueAtTime(1, t0);
+          gainA.gain.linearRampToValueAtTime(0, t0 + xf);
+          gainB.gain.setValueAtTime(0, t0);
+          gainB.gain.linearRampToValueAtTime(1, t0 + xf);
+          setTimeout(() => {
+            audio.pause(); clearInterval(xfadeTimer);
+            state.player.id = toId;
+            const t = state.tracks[toId];
+            $("#pl-title").textContent = t ? ((t.artist ? t.artist + " – " : "") + t.name) : "";
+          }, (xf + 0.3) * 1000);
+        }
+      }, 100);
+    };
+    setTimeout(arm, 250);
+  });
+}
+
+function fallbackAudition(fromId, toId) {
   playTrack(fromId).then(() => {
     const startTail = () => {
       if (audio.duration && isFinite(audio.duration)) {
-        audio.currentTime = Math.max(0, audio.duration - 12);
+        audio.currentTime = Math.max(0, audio.duration - (state.crossfade || 8));
         state.player.auditionNext = toId;
-      } else {
-        setTimeout(startTail, 200);
-      }
+      } else setTimeout(startTail, 200);
     };
     setTimeout(startTail, 250);
   });
@@ -461,6 +605,10 @@ async function loadSettings() {
     $("#set-gid").value = s.google_client_id || "";
     $("#set-model").value = s.anthropic_model || "claude-opus-4-8";
     $("#set-bpmtol").value = s.target_bpm_tolerance || 6;
+    $("#set-xfade").value = s.crossfade_seconds || 8;
+    $("#set-engine").value = s.analysis_engine || "librosa";
+    $("#set-genremodel").value = s.essentia_genre_model || "";
+    $("#set-stemmodel").value = s.stem_model || "htdemucs";
   } catch (e) {}
 }
 
@@ -530,8 +678,30 @@ $("#btn-save-prefs").addEventListener("click", async () => {
   try {
     await api("/api/settings", { method: "POST", body: JSON.stringify({
       target_bpm_tolerance: parseInt($("#set-bpmtol").value, 10) || 6,
+      crossfade_seconds: parseInt($("#set-xfade").value, 10) || 8,
     })});
     toast("Preferences saved", "ok");
+    refreshStatus();
+  } catch (e) { toast(e.message, "err"); }
+});
+
+$("#btn-save-engine").addEventListener("click", async () => {
+  try {
+    await api("/api/settings", { method: "POST", body: JSON.stringify({
+      analysis_engine: $("#set-engine").value,
+      essentia_genre_model: $("#set-genremodel").value,
+    })});
+    toast("Analysis engine saved", "ok");
+    refreshStatus();
+  } catch (e) { toast(e.message, "err"); }
+});
+
+$("#btn-save-stems").addEventListener("click", async () => {
+  try {
+    await api("/api/settings", { method: "POST", body: JSON.stringify({
+      stem_model: $("#set-stemmodel").value,
+    })});
+    toast("Stem model saved", "ok");
   } catch (e) { toast(e.message, "err"); }
 });
 
@@ -549,5 +719,6 @@ $("#btn-clear-cache").addEventListener("click", async () => {
   await refreshStatus();
   await loadSettings();
   await loadTracks().catch(() => {});
+  await loadSavedMixes().catch(() => {});
   setInterval(refreshStatus, 8000);
 })();

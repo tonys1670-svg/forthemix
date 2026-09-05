@@ -12,7 +12,7 @@ import threading
 from typing import Optional
 
 from .config import DB_PATH
-from .models import Track
+from .models import SavedMix, Track
 
 _lock = threading.Lock()
 
@@ -37,6 +37,15 @@ CREATE TABLE IF NOT EXISTS tracks (
     peaks         TEXT,
     error         TEXT,
     fingerprint   TEXT
+);
+
+CREATE TABLE IF NOT EXISTS mixes (
+    id          TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT,
+    track_ids   TEXT,
+    created_at  TEXT,
+    updated_at  TEXT
 );
 """
 
@@ -116,3 +125,52 @@ def delete_track(track_id: str) -> None:
 def clear_all() -> None:
     with _lock, _connect() as conn:
         conn.execute("DELETE FROM tracks")
+
+
+# --------------------------------------------------------------------------- #
+# Saved mixes
+# --------------------------------------------------------------------------- #
+def _row_to_mix(row: sqlite3.Row) -> SavedMix:
+    data = dict(row)
+    ids = data.get("track_ids")
+    data["track_ids"] = json.loads(ids) if ids else []
+    return SavedMix(**data)
+
+
+def save_mix(mix: SavedMix) -> SavedMix:
+    with _lock, _connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO mixes (id, name, description, track_ids, created_at, updated_at)
+            VALUES (:id, :name, :description, :track_ids, :created_at, :updated_at)
+            ON CONFLICT(id) DO UPDATE SET
+                name=excluded.name, description=excluded.description,
+                track_ids=excluded.track_ids, updated_at=excluded.updated_at
+            """,
+            {
+                "id": mix.id,
+                "name": mix.name,
+                "description": mix.description,
+                "track_ids": json.dumps(mix.track_ids),
+                "created_at": mix.created_at,
+                "updated_at": mix.updated_at,
+            },
+        )
+    return mix
+
+
+def list_mixes() -> list[SavedMix]:
+    with _lock, _connect() as conn:
+        rows = conn.execute("SELECT * FROM mixes ORDER BY updated_at DESC").fetchall()
+    return [_row_to_mix(r) for r in rows]
+
+
+def get_mix(mix_id: str) -> Optional[SavedMix]:
+    with _lock, _connect() as conn:
+        row = conn.execute("SELECT * FROM mixes WHERE id=?", (mix_id,)).fetchone()
+    return _row_to_mix(row) if row else None
+
+
+def delete_mix(mix_id: str) -> None:
+    with _lock, _connect() as conn:
+        conn.execute("DELETE FROM mixes WHERE id=?", (mix_id,))

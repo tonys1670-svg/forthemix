@@ -1,20 +1,25 @@
 """FastAPI application: serves the UI and all analysis/curation endpoints."""
 from __future__ import annotations
 
-import threading
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import config, db, drive, export
 from .curator import curate
 from .jobs import job
-from .models import CurationRequest, Track
+from .models import CurationRequest, SavedMix, Track
 from .transitions import score_sequence, score_transition
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 app = FastAPI(title="ForTheMix")
 
@@ -32,6 +37,12 @@ def _startup() -> None:
 @app.get("/api/status")
 def status() -> dict:
     settings = config.load_settings()
+    try:
+        from . import essentia_backend, stems
+        essentia_ok = essentia_backend.is_available()
+        stems_ok = stems.is_available()
+    except Exception:
+        essentia_ok = stems_ok = False
     return {
         "drive_connected": drive.is_connected(),
         "drive_folder_id": settings.get("drive_folder_id", ""),
@@ -40,6 +51,11 @@ def status() -> dict:
         "has_google_client": bool(settings.get("google_client_id")),
         "model": settings.get("anthropic_model"),
         "track_count": len(db.list_tracks()),
+        "analysis_engine": settings.get("analysis_engine", "librosa"),
+        "crossfade_seconds": settings.get("crossfade_seconds", 8),
+        "mixes_dir": str(config.MIXES_DIR),
+        "essentia_available": essentia_ok,
+        "stems_available": stems_ok,
     }
 
 
@@ -58,6 +74,10 @@ class SettingsIn(BaseModel):
     anthropic_api_key: Optional[str] = None
     anthropic_model: Optional[str] = None
     target_bpm_tolerance: Optional[int] = None
+    analysis_engine: Optional[str] = None
+    essentia_genre_model: Optional[str] = None
+    crossfade_seconds: Optional[int] = None
+    stem_model: Optional[str] = None
 
 
 @app.post("/api/settings")
@@ -71,6 +91,14 @@ def update_settings(body: SettingsIn) -> dict:
         updates["anthropic_model"] = body.anthropic_model.strip()
     if body.target_bpm_tolerance is not None:
         updates["target_bpm_tolerance"] = int(body.target_bpm_tolerance)
+    if body.analysis_engine in ("librosa", "essentia"):
+        updates["analysis_engine"] = body.analysis_engine
+    if body.essentia_genre_model is not None:
+        updates["essentia_genre_model"] = body.essentia_genre_model.strip()
+    if body.crossfade_seconds is not None:
+        updates["crossfade_seconds"] = max(1, min(30, int(body.crossfade_seconds)))
+    if body.stem_model:
+        updates["stem_model"] = body.stem_model.strip()
     if updates:
         config.save_settings(updates)
     if body.anthropic_api_key is not None and body.anthropic_api_key.strip():
@@ -267,6 +295,95 @@ def export_m3u(body: ExportIn):
         media_type="audio/x-mpegurl",
         headers={"Content-Disposition": f'attachment; filename="{fname}"'},
     )
+
+
+# --------------------------------------------------------------------------- #
+# Save the finished mix to the Mixes folder on disk
+# --------------------------------------------------------------------------- #
+class SaveToDiskIn(BaseModel):
+    track_ids: list[str]
+    name: Optional[str] = "mix"
+    copy_tracks: bool = False
+
+
+@app.post("/api/export/save")
+def export_save(body: SaveToDiskIn) -> dict:
+    tracks = [db.get_track(tid) for tid in body.track_ids]
+    tracks = [t for t in tracks if t]
+    if not tracks:
+        raise HTTPException(status_code=400, detail="No tracks to export.")
+    result = export.save_mix_to_disk(tracks, body.name or "mix", body.copy_tracks)
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# Saved mixes (persist between sessions)
+# --------------------------------------------------------------------------- #
+@app.get("/api/mixes")
+def list_mixes() -> dict:
+    return {"mixes": [m.model_dump() for m in db.list_mixes()]}
+
+
+class MixIn(BaseModel):
+    id: Optional[str] = None
+    name: str
+    description: Optional[str] = None
+    track_ids: list[str] = []
+
+
+@app.post("/api/mixes")
+def save_mix(body: MixIn) -> SavedMix:
+    now = _now()
+    if body.id:
+        existing = db.get_mix(body.id)
+        created = existing.created_at if existing else now
+        mix = SavedMix(id=body.id, name=body.name, description=body.description,
+                       track_ids=body.track_ids, created_at=created, updated_at=now)
+    else:
+        mix = SavedMix(id=uuid.uuid4().hex, name=body.name, description=body.description,
+                       track_ids=body.track_ids, created_at=now, updated_at=now)
+    return db.save_mix(mix)
+
+
+@app.get("/api/mixes/{mix_id}")
+def get_mix(mix_id: str) -> SavedMix:
+    mix = db.get_mix(mix_id)
+    if not mix:
+        raise HTTPException(status_code=404, detail="Mix not found")
+    return mix
+
+
+@app.delete("/api/mixes/{mix_id}")
+def delete_mix(mix_id: str) -> dict:
+    db.delete_mix(mix_id)
+    return {"deleted": True}
+
+
+# --------------------------------------------------------------------------- #
+# Stem separation (optional / experimental)
+# --------------------------------------------------------------------------- #
+class StemIn(BaseModel):
+    track_id: str
+    two_stems: Optional[str] = None   # e.g. "vocals" for acapella/instrumental
+
+
+@app.post("/api/stems")
+def separate_stems(body: StemIn) -> dict:
+    from . import stems
+
+    if not stems.is_available():
+        raise HTTPException(
+            status_code=400,
+            detail="Stem separation needs Demucs installed (pip install demucs). See README.",
+        )
+    t = db.get_track(body.track_id)
+    if not t or not t.local_path or not Path(t.local_path).exists():
+        raise HTTPException(status_code=404, detail="Track audio not available")
+    model = config.load_settings().get("stem_model", "htdemucs")
+    try:
+        return stems.separate(Path(t.local_path), model=model, two_stems=body.two_stems)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Stem separation failed: {exc}")
 
 
 # --------------------------------------------------------------------------- #

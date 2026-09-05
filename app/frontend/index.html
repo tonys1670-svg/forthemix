@@ -72,9 +72,19 @@
             <h2>Your mix <span id="mix-count" class="count">0</span></h2>
             <div class="actions">
               <button id="btn-clear-mix" class="ghost">Clear</button>
+              <button id="btn-save-mix" class="ghost">💾 Save mix</button>
+              <button id="btn-save-folder" class="ghost" title="Write the playlist into your Mixes folder">Save to folder</button>
               <button id="btn-export" class="primary">Export M3U</button>
             </div>
           </div>
+
+          <div class="saved-bar">
+            <label>Saved mixes</label>
+            <select id="saved-mixes"><option value="">— load a saved mix —</option></select>
+            <button id="btn-load-saved" class="mini">Load</button>
+            <button id="btn-delete-saved" class="mini">Delete</button>
+          </div>
+
           <div id="mix-list" class="mix-list">
             <p class="empty">Add tracks from the left to start building. Transition tips appear between them.</p>
           </div>
@@ -174,10 +184,43 @@
         <label>Smooth BPM tolerance (± BPM considered an easy beatmatch)
           <input id="set-bpmtol" type="number" min="1" max="20" value="6" />
         </label>
+        <label>Transition crossfade length (seconds) — used when you audition a transition
+          <input id="set-xfade" type="number" min="1" max="30" value="8" />
+        </label>
         <div class="actions">
           <button id="btn-save-prefs" class="ghost">Save</button>
           <button id="btn-clear-cache" class="danger">Clear analysis cache</button>
         </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Analysis engine</h3>
+        <p class="hint">librosa is built in and needs no extra setup. Essentia adds pro-grade key/BPM and optional ML genre tagging but must be installed separately (<code>pip install -r requirements-optional.txt</code>).</p>
+        <label>Engine
+          <select id="set-engine">
+            <option value="librosa">librosa (built in)</option>
+            <option value="essentia">Essentia (if installed)</option>
+          </select>
+        </label>
+        <label>Essentia genre model path (optional)
+          <input id="set-genremodel" type="text" placeholder="C:\\models\\genre_discogs400.pb" />
+        </label>
+        <p class="hint">Essentia detected: <span id="essentia-state" class="state">checking…</span></p>
+        <div class="actions"><button id="btn-save-engine" class="ghost">Save</button></div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Stem separation <span class="badge">experimental</span></h3>
+        <p class="hint">Split a track into vocals / drums / bass / other using Demucs (great for acapellas &amp; instrumentals). Requires <code>pip install demucs</code> and is much faster on a GPU. Separated stems are written to your data folder.</p>
+        <label>Demucs model
+          <select id="set-stemmodel">
+            <option value="htdemucs">htdemucs (balanced)</option>
+            <option value="htdemucs_ft">htdemucs_ft (best, slower)</option>
+            <option value="mdx_extra">mdx_extra</option>
+          </select>
+        </label>
+        <p class="hint">Demucs detected: <span id="stems-state" class="state">checking…</span></p>
+        <div class="actions"><button id="btn-save-stems" class="ghost">Save</button></div>
       </div>
     </section>
   </main>
