@@ -191,6 +191,19 @@ textarea { resize: vertical; margin-bottom: 12px; }
 .toast.err { border-color: var(--clash); }
 .toast.ok { border-color: var(--great); }
 
+/* ---------------- Saved mixes bar ---------------- */
+.saved-bar { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; flex-wrap: wrap; }
+.saved-bar label { color: var(--muted); font-size: 13px; }
+.saved-bar select {
+  background: var(--bg); color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 8px; min-width: 200px;
+}
+.badge { padding: 2px 8px; border-radius: 6px; background: var(--bg-3); font-size: 12px; color: var(--muted); }
+code { background: var(--bg-3); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+/* crossfade playhead marker on the waveform */
+.xfade-note { color: var(--accent-2); font-size: 12px; }
+
 @media (max-width: 900px) {
   .mix-layout, .curator-grid { grid-template-columns: 1fr; }
 }

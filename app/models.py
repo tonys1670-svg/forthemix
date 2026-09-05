@@ -43,6 +43,16 @@ class TransitionComment(BaseModel):
     comment: str                 # one-line summary
 
 
+class SavedMix(BaseModel):
+    """A named, ordered set the user has saved for later."""
+    id: str
+    name: str
+    description: Optional[str] = None
+    track_ids: list[str] = []
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
 class CurationRequest(BaseModel):
     description: str
     target_minutes: Optional[int] = None

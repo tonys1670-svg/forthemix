@@ -70,6 +70,25 @@ def detect_key(chroma_mean: np.ndarray) -> tuple[Optional[str], Optional[str], f
     return camelot, key_name, round(confidence, 2)
 
 
+_FLAT_TO_SHARP = {
+    "Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#",
+    "Cb": "B", "Fb": "E",
+}
+
+
+def camelot_from_key(key: str, scale: str) -> tuple[Optional[str], Optional[str]]:
+    """Map a named key (e.g. 'Ab', 'minor') to (camelot, 'Ab minor').
+
+    Used by the Essentia backend, whose KeyExtractor returns key + scale names.
+    """
+    if not key:
+        return None, None
+    pitch = _FLAT_TO_SHARP.get(key, key)
+    is_minor = str(scale).lower().startswith("min")
+    camelot = _CAMELOT.get((pitch, is_minor))
+    return camelot, f"{key} {'minor' if is_minor else 'major'}"
+
+
 def _parse_camelot(code: str) -> Optional[tuple[int, str]]:
     if not code or len(code) < 2:
         return None

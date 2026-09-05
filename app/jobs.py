@@ -56,11 +56,10 @@ class AnalysisJob:
     def _run(self, folder_id: str) -> None:
         # Imported lazily so a missing optional dep can't break app import.
         from . import config, db, drive
-        from .analysis import analyze_file
+        from .analysis import analyze_track
         from .models import Track
 
         settings = config.load_settings()
-        energy_scale = int(settings.get("energy_scale", 10))
         try:
             self._set(phase="downloading", message="Listing Drive folder…")
 
@@ -97,7 +96,7 @@ class AnalysisJob:
                     filename=name, local_path=local_path,
                 )
                 try:
-                    analyze_file(Path(local_path), track, energy_scale)
+                    analyze_track(Path(local_path), track, settings)
                 except Exception as exc:  # never let one bad file kill the run
                     track.error = f"Analysis failed: {exc}"
                     track.analyzed = False

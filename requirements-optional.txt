@@ -1,0 +1,12 @@
+# Optional, heavyweight extras — install only if you want these features.
+#
+#   pip install -r requirements-optional.txt
+#
+# Essentia: pro-grade key/BPM detection and (with a model) ML genre tagging.
+# Prebuilt wheels exist for most platforms; on some you may need conda.
+essentia==2.1b6.dev1110 ; platform_system != "Windows"
+
+# Demucs: AI stem separation (vocals / drums / bass / other). Large — pulls in
+# PyTorch (~1-2 GB) and downloads a ~300 MB model on first run. A GPU is
+# strongly recommended (CPU works but is ~real-time-slow).
+demucs==4.0.1

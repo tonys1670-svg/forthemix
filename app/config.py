@@ -41,6 +41,14 @@ DATA_DIR = _data_dir()
 AUDIO_DIR = DATA_DIR / "audio"
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
+# Finished mixes (M3U playlists, optional copied tracks) are written here.
+MIXES_DIR = DATA_DIR / "mixes"
+MIXES_DIR.mkdir(parents=True, exist_ok=True)
+
+# Separated stems (vocals / instrumental etc.), grouped per source track.
+STEMS_DIR = DATA_DIR / "stems"
+STEMS_DIR.mkdir(parents=True, exist_ok=True)
+
 SETTINGS_PATH = DATA_DIR / "settings.json"
 SECRETS_PATH = DATA_DIR / "secrets.enc"
 KEYFILE_PATH = DATA_DIR / "key.bin"
@@ -63,11 +71,17 @@ def resource_path(*parts: str) -> Path:
 DEFAULT_SETTINGS: dict[str, Any] = {
     "drive_folder_id": "",
     "drive_folder_name": "",
+    "drive_mixes_folder_id": "",     # destination folder for finished mixes
+    "drive_mixes_folder_name": "",
     "google_client_id": "",
     "google_client_secret": "",
     "anthropic_model": "claude-opus-4-8",
     "target_bpm_tolerance": 6,       # BPM gap considered "smooth"
     "energy_scale": 10,              # energy reported on a 0..N scale
+    "analysis_engine": "librosa",    # "librosa" | "essentia"
+    "essentia_genre_model": "",      # optional path to an Essentia genre model
+    "crossfade_seconds": 8,          # transition-audition crossfade length
+    "stem_model": "htdemucs",        # Demucs model used for stem separation
 }
 
 
