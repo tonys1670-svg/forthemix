@@ -82,6 +82,8 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "essentia_genre_model": "",      # optional path to an Essentia genre model
     "crossfade_seconds": 8,          # transition-audition crossfade length
     "stem_model": "htdemucs",        # Demucs model used for stem separation
+    "audio_device_id": "",           # selected OS audio output device (index/id)
+    "audio_device_name": "",
 }
 
 

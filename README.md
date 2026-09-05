@@ -198,6 +198,33 @@ prep tool, not something to run mid-set.
 [Demucs (facebookresearch)](https://github.com/facebookresearch/demucs) ·
 [Demucs v4 production guide](https://tomodahinata.com/en/blog/demucs-v4-music-source-separation-production-guide)
 
+## HTTP API (backend)
+
+The local FastAPI server exposes these endpoints (the desktop UI and the mobile
+companion talk to the same API). Additive routes for the redesigned UI are marked ✚.
+
+**Library**
+- `GET /api/tracks` — list tracks. ✚ Now supports `?offset=&limit=&sort=&dir=&q=&crate=&bpm_min=&bpm_max=` and returns `{ tracks, total, offset, limit }`. With no params it returns every track (unchanged for existing callers).
+  - `sort`: `title|artist|genre|bpm|key|energy|duration` (default `title`). `key` orders by Camelot **number then letter** (1A,1B,2A…).
+  - `crate`: `all|unanalysed|nogenre|lowconf|dupes`.
+- `GET /api/tracks/{id}` — full track incl. waveform peaks.
+- `PATCH /api/tracks/{id}` — inline edit. Sets `key_confidence`/`bpm_confidence` to 1.0 and records the fields in `user_edited` so re-analysis won't overwrite them.
+- ✚ `PATCH /api/tracks` — bulk edit: `{ "ids": [...], "genre": "…" }` → `{ updated: [...] }`.
+- ✚ `GET /api/library/health` → `{ total, unanalysed, missing_genre, low_confidence_key, duplicates }`.
+
+**Analysis job** (progress persists in `cache.db` and resumes after a restart)
+- `POST /api/analyze` — start.
+- `GET /api/analyze/status` → `{ running, paused, done, total, current, eta_seconds, recent[] }`; `recent` is the last 10 finished files (`{ id, name, key_camelot, bpm, status }`, status = `cached|analysed|tags_only|error`).
+- ✚ `POST /api/analyze/pause` · `POST /api/analyze/resume` · `POST /api/analyze/cancel`.
+
+**Audio output device** (Python-side enumeration; needs optional `sounddevice`)
+- ✚ `GET /api/audio/devices` → `{ devices: [{ id, name, default }], selected_id, wired, note }`.
+- ✚ `POST /api/audio/device` — `{ "id": "…" }`, persisted in `settings.json`. *Note:* the device list and selection are real, but playback isn't routed through Python yet (`wired: false`) — playback is currently browser-side.
+
+**Mixing** (unchanged scoring — the UI mirrors these exactly)
+- `POST /api/transitions` — score a sequence (harmonic/tempo/energy). **Weights and thresholds are fixed.**
+- ✚ `GET /api/mix` / `PUT /api/mix` — the shared current mix sequence (desktop ⇄ mobile), persisted in `cache.db`.
+
 ## Accuracy notes (honest limitations)
 
 - **Key & BPM** from `librosa` are reliable for most electronic/dance material;

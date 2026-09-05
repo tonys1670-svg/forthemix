@@ -29,6 +29,10 @@ FRONTEND_DIR = config.resource_path("frontend")
 @app.on_event("startup")
 def _startup() -> None:
     db.init_db()
+    try:
+        job.resume_if_pending()  # continue an analysis interrupted by a restart
+    except Exception:
+        pass
 
 
 # --------------------------------------------------------------------------- #
@@ -214,11 +218,37 @@ def drive_save_mix(body: DriveSaveIn) -> dict:
 # Library & analysis
 # --------------------------------------------------------------------------- #
 @app.get("/api/tracks")
-def get_tracks() -> dict:
-    tracks = db.list_tracks()
+def get_tracks(
+    offset: int = 0,
+    limit: Optional[int] = None,
+    sort: str = "title",
+    dir: str = "asc",
+    q: Optional[str] = None,
+    crate: str = "all",
+    bpm_min: Optional[float] = None,
+    bpm_max: Optional[float] = None,
+) -> dict:
+    """Paged/sorted/filtered library listing.
+
+    With no parameters this returns every track (old behaviour) plus the
+    total/offset/limit envelope, so existing callers keep working.
+    """
+    sort = sort if sort in ("title", "artist", "genre", "bpm", "key", "energy", "duration") else "title"
+    direction = "desc" if str(dir).lower() == "desc" else "asc"
+    crate = crate if crate in ("all", "unanalysed", "nogenre", "lowconf", "dupes") else "all"
+
+    page, total = db.query_tracks(
+        offset=max(0, offset), limit=limit, sort=sort, direction=direction,
+        q=q, crate=crate, bpm_min=bpm_min, bpm_max=bpm_max,
+    )
     # Peaks are large; omit from the list payload (fetched per-track on demand).
-    slim = [t.model_dump(exclude={"peaks"}) for t in tracks]
-    return {"tracks": slim}
+    slim = [t.model_dump(exclude={"peaks"}) for t in page]
+    return {"tracks": slim, "total": total, "offset": max(0, offset), "limit": limit}
+
+
+@app.get("/api/library/health")
+def library_health() -> dict:
+    return db.library_health()
 
 
 @app.get("/api/tracks/{track_id}")
@@ -238,15 +268,54 @@ class TrackEdit(BaseModel):
     artist: Optional[str] = None
 
 
+def _apply_edits(t: Track, edits: dict) -> Track:
+    """Apply user edits, record them in user_edited, and pin the relevant
+    confidence to 1.0 so re-analysis leaves the correction alone."""
+    edited = set(t.user_edited or [])
+    for field_name, value in edits.items():
+        setattr(t, field_name, value)
+        edited.add(field_name)
+    if "key_camelot" in edits:
+        t.key_confidence = 1.0
+    if "bpm" in edits:
+        t.bpm_confidence = 1.0
+    t.user_edited = sorted(edited)
+    return t
+
+
 @app.patch("/api/tracks/{track_id}")
 def edit_track(track_id: str, body: TrackEdit) -> Track:
     t = db.get_track(track_id)
     if not t:
         raise HTTPException(status_code=404, detail="Track not found")
-    for field_name, value in body.model_dump(exclude_none=True).items():
-        setattr(t, field_name, value)
+    _apply_edits(t, body.model_dump(exclude_none=True))
     db.upsert_track(t, db.get_fingerprint(track_id))
     return t
+
+
+class BulkEdit(BaseModel):
+    ids: list[str]
+    genre: Optional[str] = None
+    bpm: Optional[float] = None
+    key_camelot: Optional[str] = None
+    energy: Optional[float] = None
+    name: Optional[str] = None
+    artist: Optional[str] = None
+
+
+@app.patch("/api/tracks")
+def edit_tracks_bulk(body: BulkEdit) -> dict:
+    """Apply the given fields to every listed id; returns the updated tracks."""
+    edits = body.model_dump(exclude_none=True, exclude={"ids"})
+    updated = []
+    for tid in body.ids:
+        t = db.get_track(tid)
+        if not t:
+            continue
+        _apply_edits(t, edits)
+        db.upsert_track(t, db.get_fingerprint(tid))
+        updated.append(t.model_dump(exclude={"peaks"}))
+    return {"updated": updated}
 
 
 @app.post("/api/analyze")
@@ -266,10 +335,54 @@ def analysis_status() -> dict:
     return job.state
 
 
+@app.post("/api/analyze/pause")
+def analysis_pause() -> dict:
+    return {"paused": job.pause(), "state": job.state}
+
+
+@app.post("/api/analyze/resume")
+def analysis_resume() -> dict:
+    return {"resumed": job.resume(), "state": job.state}
+
+
+@app.post("/api/analyze/cancel")
+def analysis_cancel() -> dict:
+    return {"cancelled": job.cancel(), "state": job.state}
+
+
 @app.post("/api/cache/clear")
 def clear_cache() -> dict:
     db.clear_all()
     return {"cleared": True}
+
+
+# --------------------------------------------------------------------------- #
+# Audio output device selection
+# NOTE: these are declared BEFORE /api/audio/{track_id} so "devices"/"device"
+# are not captured by the {track_id} path parameter.
+# --------------------------------------------------------------------------- #
+@app.get("/api/audio/devices")
+def audio_devices() -> dict:
+    from . import audiodev
+    result = audiodev.list_output_devices()
+    result["selected_id"] = config.load_settings().get("audio_device_id", "")
+    return result
+
+
+class AudioDeviceIn(BaseModel):
+    id: str
+    name: Optional[str] = ""
+
+
+@app.post("/api/audio/device")
+def set_audio_device(body: AudioDeviceIn) -> dict:
+    config.save_settings({"audio_device_id": body.id, "audio_device_name": body.name or ""})
+    return {
+        "selected_id": body.id,
+        "selected_name": body.name or "",
+        "wired": False,
+        "note": "Selection saved. Playback is not yet routed through Python to this device.",
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -311,6 +424,25 @@ def transition_pair(body: PairIn) -> dict:
         raise HTTPException(status_code=404, detail="Track not found")
     tol = config.load_settings().get("target_bpm_tolerance", 6)
     return score_transition(a, b, bpm_tol=tol).model_dump()
+
+
+# --------------------------------------------------------------------------- #
+# Shared current mix (desktop <-> mobile companion) — persisted in cache.db.
+# POST /api/transitions above stays the scoring endpoint, unchanged.
+# --------------------------------------------------------------------------- #
+@app.get("/api/mix")
+def get_current_mix() -> dict:
+    return {"track_ids": db.get_current_mix()}
+
+
+class CurrentMixIn(BaseModel):
+    track_ids: list[str]
+
+
+@app.put("/api/mix")
+def put_current_mix(body: CurrentMixIn) -> dict:
+    db.set_current_mix(body.track_ids)
+    return {"track_ids": body.track_ids}
 
 
 # --------------------------------------------------------------------------- #
