@@ -73,7 +73,8 @@
             <div class="actions">
               <button id="btn-clear-mix" class="ghost">Clear</button>
               <button id="btn-save-mix" class="ghost">💾 Save mix</button>
-              <button id="btn-save-folder" class="ghost" title="Write the playlist into your Mixes folder">Save to folder</button>
+              <button id="btn-save-folder" class="ghost" title="Write the playlist into your local Mixes folder">Save to folder</button>
+              <button id="btn-save-drive" class="ghost" title="Upload the finished mix to your Drive project-mixes folder">☁ Save to Drive</button>
               <button id="btn-export" class="primary">Export M3U</button>
             </div>
           </div>
@@ -159,6 +160,16 @@
           </div>
           <ul id="folder-results" class="folder-list"></ul>
           <p class="hint" id="selected-folder">None selected</p>
+        </div>
+
+        <div class="folder-picker">
+          <label>Finished-mixes destination folder (where "Save to Drive" uploads)</label>
+          <div class="row">
+            <input id="mixes-folder-search" type="text" placeholder="Search destination folder by name…" />
+            <button id="btn-mixes-folder-search" class="ghost">Search</button>
+          </div>
+          <ul id="mixes-folder-results" class="folder-list"></ul>
+          <p class="hint" id="selected-mixes-folder">None selected — finished mixes save locally until set. A “project-mixes” subfolder is created inside it automatically.</p>
         </div>
       </div>
 

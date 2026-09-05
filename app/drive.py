@@ -13,7 +13,13 @@ from typing import Callable, Optional
 
 from . import config
 
-SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+# readonly: browse/list/download the nominated library folder.
+# drive.file: create files/folders the app makes (used to upload finished mixes
+# into your Mixes destination folder). Least-privilege for read + write-back.
+SCOPES = [
+    "https://www.googleapis.com/auth/drive.readonly",
+    "https://www.googleapis.com/auth/drive.file",
+]
 
 _AUDIO_MIME_PREFIXES = ("audio/",)
 _AUDIO_EXTS = (".mp3", ".wav", ".flac", ".m4a", ".aac", ".aiff", ".aif", ".ogg", ".wma")
@@ -147,6 +153,48 @@ def download_file(file_id: str, name: str) -> Path:
         while not done:
             _, done = downloader.next_chunk()
     return dest
+
+
+def find_or_create_subfolder(parent_id: str, name: str) -> dict:
+    """Return an existing sub-folder named ``name`` under ``parent_id``, or create it."""
+    svc = _service()
+    safe = name.replace("'", "\\'")
+    q = (
+        "mimeType='application/vnd.google-apps.folder' and trashed=false "
+        f"and name='{safe}' and '{parent_id}' in parents"
+    )
+    existing = svc.files().list(q=q, fields="files(id,name)", pageSize=1).execute().get("files", [])
+    if existing:
+        return existing[0]
+    meta = {"name": name, "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]}
+    return svc.files().create(body=meta, fields="id,name").execute()
+
+
+def upload_bytes(name: str, data: bytes, parent_id: str, mime: str = "application/octet-stream") -> dict:
+    """Upload in-memory bytes as a new Drive file inside ``parent_id``."""
+    import io
+
+    from googleapiclient.http import MediaIoBaseUpload
+
+    svc = _service()
+    media = MediaIoBaseUpload(io.BytesIO(data), mimetype=mime, resumable=False)
+    meta = {"name": name, "parents": [parent_id]}
+    return svc.files().create(
+        body=meta, media_body=media, fields="id,name,webViewLink"
+    ).execute()
+
+
+def upload_local_file(path: str, parent_id: str, name: Optional[str] = None) -> dict:
+    """Upload a local file into ``parent_id``."""
+    from googleapiclient.http import MediaFileUpload
+
+    svc = _service()
+    p = Path(path)
+    media = MediaFileUpload(str(p), resumable=True)
+    meta = {"name": name or p.name, "parents": [parent_id]}
+    return svc.files().create(
+        body=meta, media_body=media, fields="id,name,webViewLink"
+    ).execute()
 
 
 def sync_folder(folder_id: str, progress: Optional[Callable[[int, int, str], None]] = None) -> list[dict]:

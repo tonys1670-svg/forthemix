@@ -48,8 +48,14 @@ The app signs into your own Google account to read the folder you nominate.
 3. **Credentials → Create credentials → OAuth client ID → Application type: Desktop app**.
 4. Copy the **Client ID** and **Client secret** into Settings → *Google Drive*, click **Save client**, then **Connect Google Drive** and complete the browser sign-in.
 5. Use **Search folder by name** to find and select the folder of tracks.
+6. *(Optional)* Set a **Finished-mixes destination folder** — the app uploads
+   completed mixes into a `project-mixes` subfolder it creates inside it (via the
+   **☁ Save to Drive** button in the Mix Builder).
 
-*Read-only Drive scope is requested — the app never modifies your Drive.*
+*Scopes: `drive.readonly` to read your library, plus `drive.file` so the app can
+upload finished mixes into folders it creates. It only ever writes files it makes
+— it never modifies your existing files. If you connected before this write
+feature existed, **disconnect and reconnect** once so the new permission applies.*
 
 ### 2. Anthropic API key (for the AI Curator)
 Paste your key (`sk-ant-…`) into Settings → *Anthropic*. It's stored **encrypted

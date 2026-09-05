@@ -54,6 +54,7 @@ def status() -> dict:
         "analysis_engine": settings.get("analysis_engine", "librosa"),
         "crossfade_seconds": settings.get("crossfade_seconds", 8),
         "mixes_dir": str(config.MIXES_DIR),
+        "drive_mixes_folder_name": settings.get("drive_mixes_folder_name", ""),
         "essentia_available": essentia_ok,
         "stems_available": stems_ok,
     }
@@ -151,6 +152,62 @@ class FolderIn(BaseModel):
 def select_folder(body: FolderIn) -> dict:
     config.save_settings({"drive_folder_id": body.id, "drive_folder_name": body.name})
     return {"drive_folder_id": body.id, "drive_folder_name": body.name}
+
+
+@app.post("/api/drive/select-mixes-folder")
+def select_mixes_folder(body: FolderIn) -> dict:
+    config.save_settings({"drive_mixes_folder_id": body.id, "drive_mixes_folder_name": body.name})
+    return {"drive_mixes_folder_id": body.id, "drive_mixes_folder_name": body.name}
+
+
+class DriveSaveIn(BaseModel):
+    track_ids: list[str]
+    name: Optional[str] = "mix"
+    copy_tracks: bool = False
+    subfolder: Optional[str] = "project-mixes"   # find/create under the destination
+
+
+@app.post("/api/drive/save-mix")
+def drive_save_mix(body: DriveSaveIn) -> dict:
+    if not drive.is_connected():
+        raise HTTPException(status_code=400, detail="Not connected to Google Drive.")
+    settings = config.load_settings()
+    dest = settings.get("drive_mixes_folder_id")
+    if not dest:
+        raise HTTPException(
+            status_code=400,
+            detail="Choose a Drive destination folder for mixes in Settings first.",
+        )
+    tracks = [db.get_track(tid) for tid in body.track_ids]
+    tracks = [t for t in tracks if t]
+    if not tracks:
+        raise HTTPException(status_code=400, detail="No tracks to save.")
+
+    name = (body.name or "mix").strip() or "mix"
+    try:
+        parent = dest
+        if body.subfolder:
+            sub = drive.find_or_create_subfolder(dest, body.subfolder)
+            parent = sub["id"]
+        content = export.build_m3u(tracks).encode("utf-8")
+        m3u = drive.upload_bytes(f"{name}.m3u8", content, parent, "audio/x-mpegurl")
+        uploaded = [m3u.get("name")]
+        if body.copy_tracks:
+            for i, t in enumerate(tracks, 1):
+                if t.local_path and Path(t.local_path).exists():
+                    ext = Path(t.local_path).suffix or ".mp3"
+                    up = drive.upload_local_file(t.local_path, parent, f"{i:02d} - {t.name}{ext}")
+                    uploaded.append(up.get("name"))
+    except drive.DriveError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        # Most likely an insufficient-scope token from before the read/write upgrade.
+        raise HTTPException(
+            status_code=400,
+            detail=f"Drive upload failed ({exc}). If you connected before enabling "
+                   f"write access, disconnect and reconnect Google Drive in Settings.",
+        )
+    return {"m3u_link": m3u.get("webViewLink"), "folder_id": parent, "uploaded": uploaded}
 
 
 # --------------------------------------------------------------------------- #

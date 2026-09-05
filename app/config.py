@@ -71,6 +71,8 @@ def resource_path(*parts: str) -> Path:
 DEFAULT_SETTINGS: dict[str, Any] = {
     "drive_folder_id": "",
     "drive_folder_name": "",
+    "drive_mixes_folder_id": "",     # destination folder for finished mixes
+    "drive_mixes_folder_name": "",
     "google_client_id": "",
     "google_client_secret": "",
     "anthropic_model": "claude-opus-4-8",

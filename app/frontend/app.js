@@ -85,6 +85,8 @@ async function refreshStatus() {
   $("#ai-state").className = "state " + (s.has_anthropic_key ? "ok" : "");
   $("#selected-folder").textContent = s.drive_folder_name ? `Selected: ${s.drive_folder_name}` : "None selected";
 
+  const smf = $("#selected-mixes-folder");
+  if (smf && s.drive_mixes_folder_name) smf.textContent = "Destination: " + s.drive_mixes_folder_name + " (uploads into its project-mixes subfolder)";
   state.crossfade = s.crossfade_seconds || 8;
   state.stemsAvailable = !!s.stems_available;
   const es = $("#essentia-state");
@@ -307,6 +309,19 @@ $("#btn-save-folder").addEventListener("click", async () => {
   try {
     const res = await api("/api/export/save", { method: "POST", body: JSON.stringify({ track_ids: state.mix, name }) });
     toast("Saved to: " + res.m3u, "ok");
+  } catch (e) { toast(e.message, "err"); }
+});
+
+/* ------------------------- save to Google Drive ------------------------- */
+$("#btn-save-drive").addEventListener("click", async () => {
+  if (!state.mix.length) return toast("Mix is empty", "err");
+  if (!state.status.drive_connected) return toast("Connect Google Drive in Settings first", "err");
+  const name = prompt("Name this mix (uploaded to your Drive project-mixes folder):", "My set");
+  if (!name) return;
+  toast("Uploading to Google Drive…");
+  try {
+    const res = await api("/api/drive/save-mix", { method: "POST", body: JSON.stringify({ track_ids: state.mix, name }) });
+    toast("Saved to Drive: " + (res.uploaded ? res.uploaded.join(", ") : name), "ok");
   } catch (e) { toast(e.message, "err"); }
 });
 
@@ -658,6 +673,30 @@ $("#folder-results").addEventListener("click", async (e) => {
     $$("#folder-results li").forEach((x) => x.classList.remove("sel"));
     li.classList.add("sel");
     toast("Folder selected: " + li.dataset.fname, "ok");
+    refreshStatus();
+  } catch (e) { toast(e.message, "err"); }
+});
+
+$("#btn-mixes-folder-search").addEventListener("click", async () => {
+  const name = $("#mixes-folder-search").value.trim();
+  if (!name) return;
+  try {
+    const data = await api("/api/drive/search?name=" + encodeURIComponent(name));
+    const ul = $("#mixes-folder-results");
+    ul.innerHTML = data.folders.length
+      ? data.folders.map((f) => `<li data-fid="${f.id}" data-fname="${esc(f.name)}">${esc(f.name)}<span class="muted">select</span></li>`).join("")
+      : '<li class="muted">No folders found</li>';
+  } catch (e) { toast(e.message, "err"); }
+});
+
+$("#mixes-folder-results").addEventListener("click", async (e) => {
+  const li = e.target.closest("li[data-fid]");
+  if (!li) return;
+  try {
+    await api("/api/drive/select-mixes-folder", { method: "POST", body: JSON.stringify({ id: li.dataset.fid, name: li.dataset.fname }) });
+    $$("#mixes-folder-results li").forEach((x) => x.classList.remove("sel"));
+    li.classList.add("sel");
+    toast("Mixes destination set: " + li.dataset.fname, "ok");
     refreshStatus();
   } catch (e) { toast(e.message, "err"); }
 });
