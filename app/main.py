@@ -8,7 +8,9 @@ a "nothing happened" launch can be diagnosed.
 """
 from __future__ import annotations
 
+import io
 import socket
+import sys
 import threading
 import time
 import traceback
@@ -21,6 +23,32 @@ from . import APP_NAME
 from .server import app
 
 _LOG = None
+
+
+class _NullStream(io.TextIOBase):
+    """A stand-in for stdout/stderr when the app runs windowed (no console)."""
+
+    def write(self, *args, **kwargs) -> int:
+        return 0
+
+    def flush(self) -> None:
+        pass
+
+    def isatty(self) -> bool:
+        return False
+
+
+def _ensure_std_streams() -> None:
+    """A windowed PyInstaller app has sys.stdout/stderr == None; uvicorn's log
+    setup then calls .isatty() on None and the server never starts. Give it
+    safe no-op streams so logging (and any library that prints) works."""
+    if sys.stdout is None:
+        sys.stdout = _NullStream()
+    if sys.stderr is None:
+        sys.stderr = _NullStream()
+
+
+_ensure_std_streams()
 
 
 def _log(msg: str) -> None:
@@ -59,7 +87,10 @@ def _wait_until_up(host: str, port: int, timeout: float = 20.0) -> bool:
 
 def run_server(host: str, port: int) -> None:
     try:
-        uvicorn.run(app, host=host, port=port, log_level="warning")
+        _ensure_std_streams()
+        # log_config=None stops uvicorn building its colourized formatter, which
+        # calls sys.stdout.isatty() and crashes in a windowed (no-console) build.
+        uvicorn.run(app, host=host, port=port, log_level="warning", log_config=None)
     except Exception:
         _log("Server thread crashed:\n" + traceback.format_exc())
 
