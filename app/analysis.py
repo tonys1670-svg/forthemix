@@ -154,16 +154,36 @@ def analyze_track(path: Path, track: Track, settings: dict) -> Track:
     energy_scale = int(settings.get("energy_scale", 10))
     engine = settings.get("analysis_engine", "librosa")
 
+    used_essentia = False
     if engine == "essentia":
         try:
             from . import essentia_backend
 
             if essentia_backend.is_available():
-                return essentia_backend.analyze_file(
+                essentia_backend.analyze_file(
                     path, track, energy_scale,
                     genre_model=settings.get("essentia_genre_model", ""),
                 )
+                used_essentia = True
         except Exception:
             pass  # fall through to librosa
 
-    return analyze_file(path, track, energy_scale)
+    if not used_essentia:
+        analyze_file(path, track, energy_scale)
+
+    # Overlay the user's Mixed In Key / ID3-tag values as the authoritative
+    # source (they trust their own MIK analysis over our re-derivation).
+    if settings.get("prefer_mik", True):
+        try:
+            from . import mik
+
+            sourced = mik.apply(path, track)
+            # If audio couldn't be decoded but tags gave us key/bpm, the track
+            # is still usable — mark it analysed rather than an error.
+            if not track.analyzed and ("key_camelot" in sourced or "bpm" in sourced):
+                track.analyzed = True
+                track.error = None
+        except Exception:
+            pass
+
+    return track
