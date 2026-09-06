@@ -127,24 +127,29 @@ def assemble(
     cur_pos = 0  # played-sample cursor into the current track
     for i in range(n):
         cur = played[i]
-        ins = instr_by_from.get(i + 1) if i < n - 1 else None
-        if ins is None or i == n - 1:
-            # last track (or no transition defined): play to the end
-            result.append(cur[cur_pos:])
+        if i == n - 1:
+            result.append(cur[cur_pos:])  # last track plays to the end
             break
 
-        cf = ins.crossfade_sec if ins.crossfade_sec else default_cf
+        # Use the script's instruction for this boundary if given, else a plain
+        # default crossfade — so "Render mix" works even with no script typed.
+        ins = instr_by_from.get(i + 1)
+        cf = (ins.crossfade_sec if (ins and ins.crossfade_sec) else default_cf)
         cf_n = max(1, int(cf * sr))
-        out_idx = _sec_to_played_index(ins.from_out_sec, factors[i], sr, fallback=max(0, len(cur) - cf_n))
+        out_sec = ins.from_out_sec if ins else None
+        in_sec = ins.to_in_sec if ins else None
+        technique = ins.technique if ins else "crossfade"
+
+        out_idx = _sec_to_played_index(out_sec, factors[i], sr, fallback=max(0, len(cur) - cf_n))
         result.append(cur[cur_pos:out_idx])
 
         nxt = played[i + 1]
-        in_idx = _sec_to_played_index(ins.to_in_sec, factors[i + 1], sr, fallback=0)
+        in_idx = _sec_to_played_index(in_sec, factors[i + 1], sr, fallback=0)
         a_tail = cur[out_idx:out_idx + cf_n]
         b_head = nxt[in_idx:in_idx + cf_n]
         m = min(len(a_tail), len(b_head))
         if m > 0:
-            if ins.technique == "eq_bass_swap":
+            if technique == "eq_bass_swap":
                 result.append(bass_swap_crossfade(a_tail[:m], b_head[:m], sr))
             else:
                 result.append(equal_power_crossfade(a_tail[:m], b_head[:m]))
@@ -161,10 +166,27 @@ def assemble(
 # File-level helpers
 # --------------------------------------------------------------------------- #
 def load_stereo(path: str, sr: int) -> np.ndarray:
-    """Load an audio file as float32 stereo (n, 2) at ``sr``."""
-    import soundfile as sf
+    """Load an audio file as float32 stereo (n, 2) at ``sr``.
 
-    data, file_sr = sf.read(path, always_2d=True, dtype="float32")
+    Tries soundfile first (fast, handles wav/flac/mp3 via libsndfile), then falls
+    back to librosa/audioread which copes with more formats (m4a/aac/wma/…).
+    """
+    data = None
+    file_sr = sr
+    try:
+        import soundfile as sf
+        data, file_sr = sf.read(path, always_2d=True, dtype="float32")
+    except Exception:
+        data = None
+    if data is None or data.size == 0:
+        import librosa
+        y, file_sr = librosa.load(path, sr=sr, mono=False)  # (channels, n) or (n,)
+        y = np.atleast_2d(y)
+        data = y.T if y.shape[0] <= 8 else y  # -> (n, channels)
+        file_sr = sr  # librosa already resampled to sr
+
+    if data.ndim == 1:
+        data = data[:, None]
     if data.shape[1] == 1:
         data = np.repeat(data, 2, axis=1)
     elif data.shape[1] > 2:

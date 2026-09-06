@@ -257,6 +257,16 @@ $$(".grid-head button[data-sort]").forEach((b) => b.addEventListener("click", ()
 $("#pg-prev").addEventListener("click", () => { if (S.page > 0) { S.page--; loadLibrary(); } });
 $("#pg-next").addEventListener("click", () => { if ((S.page + 1) * pageSize() < S.total) { S.page++; loadLibrary(); } });
 
+$("#btn-mik").addEventListener("click", async () => {
+  $("#btn-mik").disabled = true; $("#btn-mik").textContent = "↻ Reading tags…";
+  try {
+    const res = await api("/api/library/reimport-mik", { method: "POST" });
+    toast(`Mixed In Key tags imported for ${res.updated} tracks`);
+    S.tracks = {}; await loadLibrary(); await loadHealth(); await rescore(); renderMetrics(); renderArc();
+  } catch (e) { toast(e.message); }
+  finally { $("#btn-mik").disabled = false; $("#btn-mik").textContent = "↻ MIK tags"; }
+});
+
 async function loadLibrary() {
   const ps = pageSize();
   const p = new URLSearchParams({ offset: S.page * ps, limit: ps, sort: S.sortBy, dir: S.sortDir });
@@ -292,11 +302,12 @@ function renderGrid(tracks) {
       ? `<button class="cell-edit keyval ${low ? "lowconf" : ""}" data-edit="key_camelot" data-id="${t.id}" title="${low ? "Low confidence — double-check" : (t.key_name || "")}">${t.key_camelot}</button>`
       : `<button class="cell-edit dash" data-edit="key_camelot" data-id="${t.id}">—</button>`;
     const e = t.energy;
-    const energy = e != null ? `<span class="energy"><span class="track"><i style="width:${e / 10 * 100}%"></i></span><span class="ev">${e.toFixed ? e.toFixed(1) : e}</span></span>` : `<span class="dash">—</span>`;
+    const evBtn = `<button class="cell-edit ce-energy" data-edit="energy" data-id="${t.id}">${e != null ? (e.toFixed ? e.toFixed(1) : e) : "—"}</button>`;
+    const energy = `<span class="energy"><span class="track"><i style="width:${e != null ? e / 10 * 100 : 0}%"></i></span>${evBtn}</span>`;
     return `<div class="grid-row ${inmix ? "inmix" : ""} ${S.crate === "dupes" ? "dupe" : ""}">
       <button class="addbtn ${inmix ? "in" : ""}" data-add="${t.id}">${inmix ? "−" : "+"}</button>
-      <span class="rtitle">${esc(t.name)}</span>
-      <span class="rartist">${esc(t.artist || "")}</span>
+      <button class="cell-edit ce-title" data-edit="name" data-id="${t.id}">${esc(t.name)}</button>
+      <button class="cell-edit ce-artist" data-edit="artist" data-id="${t.id}">${esc(t.artist || "—")}</button>
       <span class="gcell-genre">${genre}</span>
       <span>${bpm}</span>
       <span>${key}</span>
@@ -316,7 +327,8 @@ $("#grid-rows").addEventListener("click", (e) => {
 function startEdit(cell) {
   const id = cell.dataset.id, field = cell.dataset.edit;
   const t = S.tracks[id];
-  const cur = field === "bpm" ? (t.bpm || "") : field === "key_camelot" ? (t.key_camelot || "") : (t.genre || "");
+  const curmap = { bpm: t.bpm, energy: t.energy, key_camelot: t.key_camelot, artist: t.artist, name: t.name, genre: t.genre };
+  const cur = curmap[field] != null ? curmap[field] : "";
   S.editing = { id, field };
   const input = document.createElement("input");
   input.className = "cell-input"; input.value = cur;
@@ -325,7 +337,7 @@ function startEdit(cell) {
     if (!S.editing) return; S.editing = null;
     let val = input.value.trim();
     const body = {};
-    if (field === "bpm") { const n = parseFloat(val); if (!isNaN(n)) body.bpm = n; }
+    if (field === "bpm" || field === "energy") { const n = parseFloat(val); if (!isNaN(n)) body[field] = n; }
     else body[field] = val;
     try {
       const updated = await api("/api/tracks/" + id, { method: "PATCH", body: JSON.stringify(body) });
@@ -501,7 +513,7 @@ async function playTrack(id) {
 async function drawWave(id) {
   let peaks = [];
   try { const full = await api("/api/tracks/" + id); peaks = full.peaks || []; } catch (e) {}
-  const bars = 48; const wrap = $("#pl-wave");
+  const bars = 90; const wrap = $("#pl-wave");
   const step = Math.max(1, Math.floor(peaks.length / bars));
   const reduced = [];
   for (let i = 0; i < bars; i++) { const seg = peaks.slice(i * step, (i + 1) * step); reduced.push(seg.length ? Math.max(...seg) : 0); }
@@ -516,6 +528,12 @@ audio.addEventListener("timeupdate", () => {
   const bars = $$("#pl-wave i"); if (!bars.length || !audio.duration) return;
   const on = Math.floor((audio.currentTime / audio.duration) * bars.length);
   bars.forEach((b, i) => b.classList.toggle("on", i <= on));
+});
+// click the waveform to seek
+$("#pl-wave").addEventListener("click", (e) => {
+  if (!audio.duration) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  audio.currentTime = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * audio.duration;
 });
 $("#pl-audition").addEventListener("click", () => {
   const i = S.mix.indexOf(S.player.id);

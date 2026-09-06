@@ -88,6 +88,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "mix_render_sr": 44100,          # sample rate for rendered mixes
     "theme": "dark",                 # UI theme: "dark" | "light"
     "density": "comfortable",        # UI row density: "comfortable" | "compact"
+    "prefer_mik": True,              # trust Mixed In Key / ID3 tags over librosa
 }
 
 

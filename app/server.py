@@ -258,6 +258,26 @@ def library_health() -> dict:
     return db.library_health()
 
 
+@app.post("/api/library/reimport-mik")
+def reimport_mik() -> dict:
+    """Re-read Mixed In Key / ID3 tags for every track and overlay key/BPM/energy
+    (authoritative), without re-downloading or re-analysing the audio. Respects
+    fields the user hand-edited."""
+    from . import mik
+    updated = 0
+    for t in db.list_tracks():
+        if not (t.local_path and Path(t.local_path).exists()):
+            continue
+        protected = {f: getattr(t, f) for f in (t.user_edited or [])}
+        sourced = mik.apply(Path(t.local_path), t)
+        for f, v in protected.items():
+            setattr(t, f, v)
+        if sourced:
+            db.upsert_track(t, db.get_fingerprint(t.id))
+            updated += 1
+    return {"updated": updated}
+
+
 @app.get("/api/tracks/{track_id}")
 def get_track(track_id: str) -> Track:
     t = db.get_track(track_id)

@@ -235,6 +235,19 @@ The renderer runs the mix at a **constant reference tempo** (the first track's B
 
 > The Windows build's CI step downloads the RubberBand CLI into `vendor/rubberband/`, PyInstaller bundles it beside the app, and it's put on `PATH` at startup. For dev on macOS/Linux, install the CLI (`brew install rubberband` / `apt install rubberband-cli`) for the same quality — without it, rendering uses the automatic librosa fallback.
 
+## Mixed In Key / tag import
+
+If you've already analysed your library in **Mixed In Key** (or another tool that
+writes key/BPM/energy into the files), ForTheMix uses **that** as the source of
+truth instead of re-deriving it — reading the **ID3 tags** (`TKEY`, `TBPM`, the
+`Energy N` comment) and, as a fallback, key/BPM in the filename (e.g. `… 7A 121`).
+Keys arrive in Camelot, Open-Key or musical notation and are normalised to
+Camelot. These values are marked full-confidence and win over librosa; your own
+hand-edits still win over everything. Use **↻ MIK tags** in the Library toolbar to
+re-import the whole library from tags instantly (no re-download or re-analysis) —
+`POST /api/library/reimport-mik`. Title, artist, genre, BPM, key and energy are
+all inline-editable in the table.
+
 ## Accuracy notes (honest limitations)
 
 - **Key & BPM** from `librosa` are reliable for most electronic/dance material;

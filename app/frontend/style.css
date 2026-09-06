@@ -198,6 +198,10 @@ body.compact .rtitle { font-size: 13px; }
 .cell-edit { background: none; border: none; text-align: left; padding: 2px 3px; font-family: var(--mono); font-size: 12px; color: var(--ink); width: 100%; }
 .cell-edit:hover { outline: 2px dashed var(--line); }
 .cell-edit.untagged { font-style: italic; color: var(--ink2); font-family: var(--disp); }
+.cell-edit.ce-title { font-family: var(--disp); font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.compact .cell-edit.ce-title { font-size: 13px; }
+.cell-edit.ce-artist { font-family: var(--mono); font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell-edit.ce-energy { font-family: var(--mono); font-size: 10.5px; padding: 0 2px; }
 .cell-input { width: 100%; padding: 2px 4px; border: 2px solid var(--acid); background: var(--bg); font-family: var(--mono); font-size: 12px; }
 .keyval { color: var(--acidtext); font-weight: 700; }
 .keyval.lowconf { border-bottom: 1px dashed var(--risky); }
@@ -243,8 +247,8 @@ body.compact .rtitle { font-size: 13px; }
 .dock { border-top: 2px solid var(--ink); background: var(--panel); display: flex; align-items: center; gap: 14px; padding: 12px 16px; flex-wrap: wrap; }
 .playbtn { width: 42px; height: 42px; background: var(--acid); color: var(--acidink); border: 2px solid var(--ink); font-size: 15px; }
 .dock .ptitle { font-family: var(--disp); font-weight: 800; font-size: 13px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
-.wave { display: flex; align-items: flex-end; gap: 2px; height: 26px; flex: 1; min-width: 120px; }
-.wave i { flex: 1; background: var(--line); } .wave i.on { background: var(--acid); }
+.wave { display: flex; align-items: flex-end; gap: 1px; height: 48px; flex: 1; min-width: 160px; cursor: pointer; background: var(--bg); border: 2px solid var(--line); padding: 3px 4px; }
+.wave i { flex: 1; min-height: 2px; background: var(--line); } .wave i.on { background: var(--acid); }
 .dock .ptime { font-family: var(--mono); font-size: 12px; color: var(--ink2); }
 .dock select { padding: 8px 10px; }
 
