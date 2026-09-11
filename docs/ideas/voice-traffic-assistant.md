@@ -191,3 +191,120 @@ to answer one question — *will I make the dock call?* — so it takes that nam
 These notes currently live in the ForTheMix repo because that's where this
 conversation started. This is an unrelated project and should get its own
 repository before any code is written.
+
+---
+
+# Build plan and running costs
+
+Written 2026-09-11. Assumes the Main Roads answer comes back positive; if the
+cameras are closed off, Stage 3 disappears and the rest still stands.
+
+## The four pieces
+
+The app is smaller than it sounds. It's four things joined together:
+
+1. **A run list** — the day's stops and their dock times. Held per driver.
+2. **A route and an ETA** — from a routing service, traffic-aware.
+3. **A picture of what's wrong** — Main Roads incidents, plus the cameras that
+   sit along the route.
+4. **A judgement** — an AI model turns all of the above into one spoken sentence
+   and a verdict.
+
+Only the fourth is novel. The first three are plumbing.
+
+## The one genuinely fiddly problem
+
+**Which cameras are on my route?**
+
+The routing service returns the route as a line on a map. The camera dataset
+gives each camera a location. So: keep the cameras within a few hundred metres
+of that line, and ahead of the driver rather than behind. That's ordinary
+geometry, not research — but it's the bit that has to be got right, because
+sending the wrong camera to the AI produces a confident, wrong answer.
+
+## Build it in stages, value first and risk last
+
+Each stage is useful on its own. Stop at any point and you still have something.
+
+### Stage 1 — the run sheet that watches itself
+No voice. No AI. A web page showing today's stops, checking the Main Roads
+incident feed, and flagging anything on the roads you're about to use.
+
+Gives you: "there's something happening on your route" — which is most of the
+value, for a fraction of the work.
+
+### Stage 2 — the verdict
+Add routing and dock times. Now it says **Clear / Tight / Late** with minutes of
+spare time against the booking.
+
+This is the stage where it becomes a product rather than a feed reader. It's the
+number Google structurally cannot give you, because Google doesn't know about
+the 07:00 slot at Dock 3.
+
+### Stage 3 — eyes on the cameras
+Add the AI. It reads the camera stills and writes the plain-English answer.
+
+This is the differentiator, and it's also the stage that depends on the Main
+Roads answer.
+
+### Stage 4 — voice
+Speaking the answer out loud is easy and free — phones already do it. Speaking
+*to* it is the hard half, and it's genuinely optional: a tap plus a couple of
+preset questions covers most of what a driver needs.
+
+Left until last deliberately. It's the least essential and the most likely to
+misbehave on iPhones.
+
+## What it costs to run
+
+### The AI — the part that can be priced properly
+
+Each question means sending the model a couple of camera images plus the
+incident and route details, and getting back a short spoken answer.
+
+At Claude Opus 5 rates (US$5 per million tokens in, US$25 out), that works out
+at roughly **2 to 6 US cents per question**, depending on how many cameras are
+involved.
+
+Say six drivers, five stops each, one question per stop, 22 working days —
+around 660 questions a month:
+
+| Volume | Rough monthly cost (USD) |
+| --- | --- |
+| 660 questions | **$15 – $45** |
+| Double that | $30 – $90 |
+
+Cheaper models exist at roughly a third the cost, and that's a decision worth
+revisiting once it's running and the quality is visible — but it's a real
+decision, not a free saving.
+
+### Everything else — needs checking, don't assume
+
+| Item | Cost | Confidence |
+| --- | --- | --- |
+| Main Roads data | Free | Confirmed — open data, CC licence |
+| Speaking the answer out loud | Free | The phone does it; no service needed |
+| Hosting the web app | Small — plausibly free at this scale | Reasonably confident |
+| Routing / ETA service | **Unknown** | Google and TomTom both have free allowances then per-request pricing. Needs pricing properly. |
+| Speech-to-text (Stage 4 only) | **Unknown** | Priced per second of audio. Clips are a few seconds, so likely small — but unpriced. |
+
+**Don't let the precise AI figure create false confidence.** The two unknowns
+above could each exceed it. They need a proper look before anyone commits.
+
+## The honest risk list
+
+- **The cameras might be closed off.** Everything distinctive rests on this.
+  The email goes first for a reason.
+- **Bad camera picks produce confident nonsense.** An AI handed the wrong camera
+  will describe it fluently and be completely wrong. This needs testing against
+  reality, not just checking that it runs.
+- **Dock times may not exist in any system.** If they live in people's heads and
+  WhatsApp threads, Stage 2 has nothing to work from, and the app drops back to
+  being a nicer traffic page.
+- **Adoption.** Subcontractors have to actually open it. A web link is the
+  lowest-friction option available, but it isn't zero.
+
+## Still open
+
+- Where do dock booking times live today?
+- How does a driver's run get into the app each morning?
