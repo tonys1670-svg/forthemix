@@ -3,6 +3,9 @@
 **Status:** early discussion, nothing built
 **Started:** 2026-09-11
 **Owner:** Tony
+**Location:** Perth, Western Australia
+**Platform:** phone (iOS + Android)
+**First users:** OMG Events staff, crew and subcontractors
 
 ---
 
@@ -38,29 +41,74 @@ Candidate answers (to be decided — see Open questions):
 - **Judgement, not data.** "Should I leave now or wait?" / "Is the M4 or Parramatta
   Road better right now?" are questions Maps can't answer in words.
 
-## Data sources — reality check
+## The real job: getting crew and trucks to bump-in on time
+
+Because the first users are OMG Events people, the question the app answers is
+not really "what's the traffic like". It's **"will my crew make the loading dock
+window, and if not, what do I do about it?"**
+
+That reframing matters because:
+
+- **Events have hard deadlines.** A venue dock slot at 6am is not a suggestion.
+  Missing it can mean fines, a lost slot, or a late show.
+- **Trucks are not cars.** Height limits, weight limits, restricted routes. A
+  car ETA from Google is the wrong answer for a 12-tonne truck. Nobody serves
+  this well.
+- **One destination, many people.** The production manager wants one view of
+  everyone converging on the venue — not each person asking separately.
+- **Warning beats asking.** The highest-value moment isn't someone asking at
+  5am. It's the app telling the production manager at 4:30am: "the Mandurah
+  crew needs to leave 25 minutes earlier today."
+
+## Data sources — reality check (Perth / WA)
 
 | Source | Available? | Notes |
 | --- | --- | --- |
-| Official state traffic feed (e.g. Live Traffic NSW) | **Likely yes, free** | Government open-data. Incidents, hazards, roadworks, and camera images. Needs verifying per state. |
-| Traffic cameras | **Likely yes, free** | Usually published as stills that refresh every minute or so, via the same government feed. This is the interesting one. |
+| **Main Roads WA open data** | **Yes, free** | Confirmed. Runs an open data portal under a Creative Commons Attribution licence. The "WebEOC Road Incidents" dataset is what feeds their own Travel Map — road closures and incident types — available as a REST API, GeoJSON, CSV and KML. Developer contact: gis@mainroads.wa.gov.au |
+| **Main Roads WA traffic cameras** | **Yes — details to confirm** | A traffic cameras dataset exists on the same portal. Third-party aggregators claim 600+ cameras across Perth, covering Mitchell, Kwinana and Graham Farmer Freeways, Tonkin and Roe Highways, Joondalup to Mandurah. **Not yet confirmed: whether the dataset gives us image URLs, how often they refresh, and whether the licence covers commercial use.** This is the single most important thing to verify. |
 | Google Maps | **Yes, paid** | Routes API gives traffic-aware ETAs. Has a free monthly allowance, costs money past it. |
 | Commercial traffic APIs (TomTom, HERE) | **Yes, free tier** | Incidents + traffic flow. Alternative to Google. |
 | Waze | **No** | No public API for reading traffic. Its data-share programme is for government agencies only. Scraping it breaks their terms. **Waze is off the table.** |
 | Police / agency social media posts | **Maybe** | Often the same info as the official feed, arriving earlier. Access depends on the platform's API pricing. |
 
+## The build-shape question
+
+A native app on both iOS and Android is the heaviest possible path: two
+codebases (or one cross-platform one), two developer accounts, app store
+review, and every subcontractor has to agree to install something. That last
+part is the real risk — you don't control a subcontractor's phone.
+
+Lighter options that may deliver most of the value:
+
+- **A web page, saved to the home screen.** Looks and behaves like an app, works
+  on both platforms, no app store, no install friction. Can do voice input.
+- **Push it out by message instead.** The crew installs nothing. They get an SMS
+  or WhatsApp: "Heads up — crash on Tonkin, leave 20 min earlier for the
+  Crown bump-in." Only the production manager needs a real interface.
+- **Full native app.** Best experience, hands-free in the car, but the biggest
+  build and the hardest adoption.
+
 ## Open questions
 
-- [ ] Which city/state? This decides which official feeds exist and how good they are.
-- [ ] What's it running on — phone app, web page, or a voice device in the car?
-- [ ] Personal tool, or something for OMG Events (crew and trucks getting to venues)?
-- [ ] Ask-on-demand only, or does it warn you unprompted before a trip?
-- [ ] Just me, or other people using it too? (Changes everything about cost and build.)
+- [ ] Confirm the Main Roads camera dataset gives usable image URLs, refresh rate, and a licence that allows commercial use.
+- [ ] Is the primary user the **driver** (asking on the way) or the **production manager** (watching the whole crew)?
+- [ ] Does it need to handle trucks differently from cars, or is everyone in vans and utes?
+- [ ] Reactive (I ask) or proactive (it warns me)? Proactive needs to know the run sheet.
+- [ ] How does it learn where people are going — manual entry, or pulled from an existing run sheet / job system?
+- [ ] Roughly how many people would use it, and how often?
 
 ## Decisions made
 
-_(nothing yet)_
+- **Perth, WA** — Main Roads WA is the primary data source.
+- **Phone-based** — exact form (native app vs web app vs messaging) still open.
+- **OMG Events crew first**, not a public product, at least initially.
 
 ## Rejected
 
 - **Waze as a data source** — no legitimate public access.
+
+## Housekeeping
+
+These notes currently live in the ForTheMix repo because that's where this
+conversation started. This is an unrelated project and should get its own
+repository before any code is written.
