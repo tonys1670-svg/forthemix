@@ -136,9 +136,38 @@ Lighter options that may deliver most of the value:
 - **Full native app.** Best experience, hands-free in the car, but the biggest
   build and the hardest adoption.
 
+## Working name: Dock Call
+
+"Bump-in" and "call time" are the words the crew already uses. The app's job is
+to answer one question — *will I make the dock call?* — so it takes that name.
+
+## Artefacts so far
+
+- **Clickable mock-up:** `docs/ideas/dock-call-mockup.html`
+  (published at https://claude.ai/code/artifact/0232477e-4774-431e-a040-4e2a6c3bebb7).
+  All invented data. Shows the home screen with the day's run, the listening
+  state, and the spoken answer with camera panel.
+- **Data enquiry email:** `docs/ideas/mainroads-data-enquiry-email.md` — draft to
+  Main Roads WA, not yet sent.
+
+## What the mock-up establishes
+
+- The home screen is **the day's run**, not a search box. The driver already
+  knows where they're going.
+- The answer leads with **one word** — Clear / Tight / Late — then the detail.
+- The headline number is **spare time against the dock booking**, not drive time.
+  That's the number Google can't give you because it doesn't know the booking.
+- The camera is **described in words as well as shown**. A driver glancing at a
+  phone shouldn't have to interpret a picture.
+- Traffic-light colours throughout. No one needs to be taught them.
+- Screen is always dark — it's used at 4:30am in a cab.
+
 ## Open questions
 
-- [ ] Confirm the Main Roads camera dataset gives usable image URLs, refresh rate, and a licence that allows commercial use.
+- [ ] **Send the Main Roads email** and confirm camera image URLs, refresh rate, and commercial licence. Everything else waits on this.
+- [ ] How does the day's run get into the app — typed in each morning, or pulled from an existing job sheet?
+- [ ] Where do dock booking times live today? The app is much weaker without them.
+- [ ] Do the trucks need different routing from the vans?
 - [x] ~~Driver or production manager?~~ **Driver.** They run multiple stops a day.
 - [ ] Does it need to handle trucks differently from cars, or is everyone in vans and utes?
 - [ ] Reactive (I ask) or proactive (it warns me)? Proactive needs to know the run sheet.
