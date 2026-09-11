@@ -71,7 +71,55 @@ That reframing matters because:
 | Waze | **No** | No public API for reading traffic. Its data-share programme is for government agencies only. Scraping it breaks their terms. **Waze is off the table.** |
 | Police / agency social media posts | **Maybe** | Often the same info as the official feed, arriving earlier. Access depends on the platform's API pricing. |
 
-## The build-shape question
+## Decided shape: a mobile web app (PWA)
+
+The driver is the primary user, and a typical day is a **run of several stops**,
+not one destination. That points at a web app saved to the phone's home screen:
+
+- One codebase, works on iPhone and Android.
+- No app store, no review process, no developer accounts.
+- Subcontractors install nothing — you send a link, they tap "Add to Home Screen".
+- Updates are instant. Fix something and everyone has it next time they open it.
+
+### What a phone web app can do
+
+- Look and open like a real app (own icon, full screen, no browser bars).
+- Listen to speech and speak the answer back out loud.
+- Read GPS location while it's open, so "from where I am now" works.
+- Show live camera images.
+- Hold the day's run of stops and track progress through them.
+
+### What it genuinely cannot do
+
+These are platform limits, not effort problems — worth knowing before planning
+around them:
+
+- **No background tracking.** Once the phone is locked or the app is closed, it
+  stops. It cannot quietly follow the driver around. iPhones are strict here.
+- **No wake word.** There's no "hey app" while driving. Someone has to tap.
+- **Notifications are second-class.** Android is fine. On iPhone, push only works
+  if the user has added it to their home screen, and it's less dependable than
+  a native app.
+
+### The consequence, and the safety line
+
+Because it needs a tap, this cannot be a thing drivers poke at while moving —
+and in WA that's illegal anyway. So design it for **the stop, not the motion**:
+
+> Driver finishes a drop, still parked. One tap: "what's the run to the next
+> one?" App speaks the answer. Driver puts the phone down and goes.
+
+That fits a multi-stop day better than a single-destination app would, and it
+keeps hands off the phone in traffic.
+
+### Biggest technical unknown
+
+Voice input on iPhone. Safari's built-in speech recognition is inconsistent, so
+the fallback is: record a short clip and send it to a speech-to-text service.
+More reliable and behaves the same on both platforms. **This needs testing on a
+real iPhone early** — it's the riskiest assumption in the plan.
+
+## Superseded: the build-shape question
 
 A native app on both iOS and Android is the heaviest possible path: two
 codebases (or one cross-platform one), two developer accounts, app store
@@ -91,7 +139,7 @@ Lighter options that may deliver most of the value:
 ## Open questions
 
 - [ ] Confirm the Main Roads camera dataset gives usable image URLs, refresh rate, and a licence that allows commercial use.
-- [ ] Is the primary user the **driver** (asking on the way) or the **production manager** (watching the whole crew)?
+- [x] ~~Driver or production manager?~~ **Driver.** They run multiple stops a day.
 - [ ] Does it need to handle trucks differently from cars, or is everyone in vans and utes?
 - [ ] Reactive (I ask) or proactive (it warns me)? Proactive needs to know the run sheet.
 - [ ] How does it learn where people are going — manual entry, or pulled from an existing run sheet / job system?
@@ -100,7 +148,9 @@ Lighter options that may deliver most of the value:
 ## Decisions made
 
 - **Perth, WA** — Main Roads WA is the primary data source.
-- **Phone-based** — exact form (native app vs web app vs messaging) still open.
+- **Mobile web app (PWA)**, not a native app — one build, no app store, no install friction for subcontractors.
+- **Primary user is the driver**, working a run of several stops per day.
+- **Designed for use while stopped**, never while moving.
 - **OMG Events crew first**, not a public product, at least initially.
 
 ## Rejected
