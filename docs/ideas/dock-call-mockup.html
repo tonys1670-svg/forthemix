@@ -3,7 +3,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-  /* ---- page palette: concrete + asphalt, light ---- */
   :root{
     --ground:#E7EBED;
     --surface:#FFFFFF;
@@ -58,61 +57,30 @@
     background:var(--ground);
     color:var(--ink);
     font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    font-size:15px;
-    line-height:1.6;
+    font-size:15px;line-height:1.6;
     -webkit-font-smoothing:antialiased;
   }
 
-  .page{
-    max-width:1080px;
-    margin:0 auto;
-    padding-inline:20px;
-    padding-block:36px 60px;
-    display:flex;
-    flex-direction:column;
-    gap:34px;
-  }
+  .page{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:36px 60px;display:flex;flex-direction:column;gap:34px}
 
-  /* ---- masthead ---- */
   .mast{display:flex;flex-direction:column;gap:12px;max-width:62ch}
-  .eyebrow{
-    font-family:"IBM Plex Mono",ui-monospace,monospace;
-    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--ink-3);
-  }
-  h1{
-    font-family:"Barlow Semi Condensed",sans-serif;
-    font-weight:700;font-size:clamp(34px,7vw,52px);line-height:1.02;
-    letter-spacing:-.01em;margin:0;text-wrap:balance;
-  }
+  .eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  h1{font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:clamp(34px,7vw,52px);line-height:1.02;letter-spacing:-.01em;margin:0;text-wrap:balance}
   .standfirst{margin:0;color:var(--ink-2);font-size:16.5px;text-wrap:pretty}
 
   .caution{
     display:flex;gap:12px;align-items:flex-start;
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-left:4px solid var(--wait);
-    border-radius:3px;
-    padding:13px 16px;
-    font-size:14px;color:var(--ink-2);
-    max-width:62ch;
+    background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--wait);
+    border-radius:3px;padding:13px 16px;font-size:14px;color:var(--ink-2);max-width:62ch;
   }
   .caution strong{color:var(--ink);font-weight:600}
 
-  /* ---- stage: device + notes ---- */
   .stage{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:44px;align-items:start}
   @media (max-width:820px){ .stage{grid-template-columns:1fr;gap:34px;justify-items:center} }
 
-  .device{
-    width:100%;max-width:380px;
-    background:var(--bezel);
-    border:1px solid var(--bezel-edge);
-    border-radius:34px;
-    padding:9px;
-    box-shadow:var(--shadow);
-  }
+  .device{width:100%;max-width:380px;background:var(--bezel);border:1px solid var(--bezel-edge);border-radius:34px;padding:9px;box-shadow:var(--shadow)}
 
-  /* ---- the app screen commits to dark: it lives in a truck cab before sunrise ---- */
+  /* the app itself commits to dark - it gets used before sunrise in a cab */
   .screen{
     --app-bg:#0F1418;
     --app-card:#192128;
@@ -124,150 +92,109 @@
     --go-a:#4CC17D;
     --wait-a:#F0B32B;
     --stop-a:#EC6B60;
-    background:var(--app-bg);
-    color:var(--app-ink);
-    border-radius:26px;
-    height:700px;
-    display:flex;flex-direction:column;
-    overflow:hidden;
-    position:relative;
+    background:var(--app-bg);color:var(--app-ink);
+    border-radius:26px;height:700px;
+    display:flex;flex-direction:column;overflow:hidden;position:relative;
   }
 
-  .statusbar{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:12px 20px 4px;
-    font-family:"IBM Plex Mono",monospace;font-size:11px;
-    color:var(--app-ink-3);letter-spacing:.04em;flex:none;
-  }
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px 4px;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--app-ink-3);letter-spacing:.04em;flex:none}
 
-  .screen-body{flex:1;overflow-y:auto;padding:6px 16px 20px;display:flex;flex-direction:column;gap:14px}
+  .screen-body{flex:1;overflow-y:auto;padding:10px 16px 20px;display:flex;flex-direction:column;gap:15px}
   .screen-body::-webkit-scrollbar{width:0}
 
-  .app-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:0 2px}
-  .app-date{font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:21px;letter-spacing:.01em}
-  .app-run{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--app-ink-3)}
+  .label{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--app-ink-3);padding:0 2px}
 
-  .label{
-    font-family:"IBM Plex Mono",monospace;font-size:10px;
-    letter-spacing:.16em;text-transform:uppercase;color:var(--app-ink-3);
-    padding:0 2px;
+  /* ---- where you are ---- */
+  .here{display:flex;align-items:center;gap:9px;padding:0 2px;color:var(--app-ink-2);font-size:13.5px}
+  .here svg{width:15px;height:15px;color:var(--go-a);flex:none}
+  .here b{color:var(--app-ink);font-weight:600}
+
+  /* ---- destination entry: the one lifted object ---- */
+  .dest{
+    background:var(--app-card);border:1px solid var(--app-line);border-radius:14px;
+    padding:15px 15px 13px;display:flex;flex-direction:column;gap:12px;
+  }
+  .dest-q{font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:26px;letter-spacing:.01em;line-height:1}
+  .dest-field{
+    background:var(--app-bg);border:1px solid var(--app-line);border-radius:10px;
+    padding:12px 13px;color:var(--app-ink-3);font-size:14.5px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .dest-field span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dest-field kbd{
+    font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--app-ink-3);border:1px solid var(--app-line);border-radius:3px;padding:2px 5px;flex:none;
   }
 
-  /* ---- next-stop card: the one lifted object on the home screen ---- */
-  .next{
-    background:var(--app-card);
-    border:1px solid var(--app-line);
-    border-radius:14px;
-    padding:16px 16px 14px;
-    display:flex;flex-direction:column;gap:11px;
-  }
-  .next-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-  .venue{font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:25px;line-height:1.08;letter-spacing:.005em}
-  .street{color:var(--app-ink-2);font-size:13px;margin-top:2px}
-  .dock{
-    text-align:right;font-family:"IBM Plex Mono",monospace;flex:none;
-  }
-  .dock-time{font-size:19px;font-weight:500;color:var(--app-ink);font-variant-numeric:tabular-nums}
-  .dock-bay{font-size:11px;color:var(--app-ink-3);letter-spacing:.05em;text-transform:uppercase}
-
-  .chip{
-    display:inline-flex;align-items:center;gap:7px;
-    font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;
-    font-size:14px;letter-spacing:.04em;text-transform:uppercase;
-    padding:5px 11px;border-radius:100px;align-self:flex-start;
-  }
-  .chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
-  .chip.go{color:var(--go-a);background:rgba(76,193,125,.13)}
-  .chip.wait{color:var(--wait-a);background:rgba(240,179,43,.14)}
-  .chip.stop{color:var(--stop-a);background:rgba(236,107,96,.14)}
-
-  /* ---- the ask control ---- */
   .ask{
-    width:100%;border:0;cursor:pointer;
-    background:var(--app-ink);color:var(--app-bg);
-    border-radius:13px;padding:15px 18px;
-    display:flex;align-items:center;justify-content:center;gap:11px;
-    font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;
-    font-size:19px;letter-spacing:.03em;
+    width:100%;border:0;cursor:pointer;background:var(--app-ink);color:var(--app-bg);
+    border-radius:11px;padding:14px 18px;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:19px;letter-spacing:.03em;
     transition:transform .12s ease, opacity .12s ease;
   }
   .ask:hover{opacity:.88}
   .ask:active{transform:scale(.985)}
   .ask svg{width:19px;height:19px;flex:none}
 
-  /* ---- run list: a sequence, so it is numbered and ruled ---- */
-  .run{display:flex;flex-direction:column}
-  .leg{
-    display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:baseline;
+  /* ---- recents ---- */
+  .recents{display:flex;flex-direction:column}
+  .recent{
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;
     padding:11px 2px;border-bottom:1px solid var(--app-line);
+    background:none;border-left:0;border-right:0;border-top:0;width:100%;
+    color:inherit;text-align:left;cursor:pointer;font:inherit;
   }
-  .leg:last-child{border-bottom:0}
-  .leg-n{
-    font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--app-ink-3);
-    font-variant-numeric:tabular-nums;
-  }
-  .leg-name{font-size:14.5px;line-height:1.35}
-  .leg-sub{font-size:12px;color:var(--app-ink-3)}
-  .leg-time{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--app-ink-2);font-variant-numeric:tabular-nums}
-  .leg.done .leg-name,.leg.done .leg-time{color:var(--app-ink-3);text-decoration:line-through;text-decoration-thickness:1px}
-  .leg.now{background:var(--app-card);border-radius:9px;padding-inline:10px;border-bottom-color:transparent}
-  .leg.now .leg-n{color:var(--wait-a)}
+  .recent:last-child{border-bottom:0}
+  .recent:hover .recent-name{color:var(--wait-a)}
+  .recent-name{font-size:14.5px;transition:color .12s ease}
+  .recent-sub{font-size:12px;color:var(--app-ink-3);display:block;margin-top:1px}
+  .recent-when{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--app-ink-3);flex:none}
 
   /* ---- listening ---- */
-  .listening{
-    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:26px;padding:30px 26px;text-align:center;
-  }
+  .listening{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:30px 26px;text-align:center}
   .pulse{width:92px;height:92px;border-radius:50%;background:rgba(240,179,43,.15);display:grid;place-items:center;position:relative}
-  .pulse::after{
-    content:"";position:absolute;inset:0;border-radius:50%;
-    border:2px solid var(--wait-a);opacity:.5;
-    animation:ring 1.6s ease-out infinite;
-  }
+  .pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--wait-a);opacity:.5;animation:ring 1.6s ease-out infinite}
   @keyframes ring{0%{transform:scale(.75);opacity:.6}100%{transform:scale(1.35);opacity:0}}
   @media (prefers-reduced-motion:reduce){ .pulse::after{animation:none;opacity:.35} }
   .pulse svg{width:34px;height:34px;color:var(--wait-a)}
   .heard{font-family:"Barlow Semi Condensed",sans-serif;font-size:25px;line-height:1.25;font-weight:500;max-width:19ch;text-wrap:balance}
   .heard-label{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--app-ink-3)}
 
-  /* ---- answer ---- */
-  .verdict{
-    border-radius:14px;padding:16px;
-    display:flex;flex-direction:column;gap:4px;
-    border:1px solid var(--app-line);
-    border-left:4px solid var(--wait-a);
-    background:var(--app-card);
+  /* ---- the answer ---- */
+  .route{
+    border:1px solid var(--app-line);border-left:4px solid var(--wait-a);
+    background:var(--app-card);border-radius:14px;padding:15px 16px;
+    display:flex;flex-direction:column;gap:7px;
   }
-  .verdict-word{
-    font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;
-    font-size:33px;line-height:1;letter-spacing:.01em;color:var(--wait-a);
-    text-transform:uppercase;
+  .route-name{font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:27px;line-height:1.08;letter-spacing:.005em;text-wrap:balance}
+  .route-to{color:var(--app-ink-2);font-size:13.5px}
+
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;
+    font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:14px;
+    letter-spacing:.04em;text-transform:uppercase;padding:5px 11px;border-radius:100px;align-self:flex-start;
   }
-  .verdict-line{color:var(--app-ink-2);font-size:14px}
+  .chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+  .chip.go{color:var(--go-a);background:rgba(76,193,125,.13)}
+  .chip.wait{color:var(--wait-a);background:rgba(240,179,43,.14)}
+  .chip.stop{color:var(--stop-a);background:rgba(236,107,96,.14)}
 
   .figures{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--app-line);border:1px solid var(--app-line);border-radius:12px;overflow:hidden}
   .fig{background:var(--app-card);padding:12px 10px;display:flex;flex-direction:column;gap:2px}
   .fig-v{font-family:"IBM Plex Mono",monospace;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
   .fig-k{font-size:10.5px;color:var(--app-ink-3);letter-spacing:.07em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace}
-  .fig.tight .fig-v{color:var(--wait-a)}
+  .fig.slow .fig-v{color:var(--wait-a)}
 
   .block{display:flex;flex-direction:column;gap:7px}
   .block p{margin:0;font-size:14.5px;line-height:1.55;color:var(--app-ink)}
-  .block p.soft{color:var(--app-ink-2)}
 
   .cam{border:1px solid var(--app-line);border-radius:12px;overflow:hidden;background:var(--app-card)}
   .cam svg{display:block;width:100%;height:auto;max-width:100%}
-  .cam-meta{
-    display:flex;justify-content:space-between;gap:10px;align-items:center;
-    padding:9px 12px;border-top:1px solid var(--app-line);
-    font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--app-ink-3);
-  }
+  .cam-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 12px;border-top:1px solid var(--app-line);font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--app-ink-3)}
   .cam-read{padding:11px 12px;font-size:14px;line-height:1.5;border-top:1px solid var(--app-line);color:var(--app-ink)}
 
-  .alt{
-    border:1px dashed var(--app-line);border-radius:12px;padding:13px;
-    display:flex;flex-direction:column;gap:5px;
-  }
+  .alt{border:1px dashed var(--app-line);border-radius:12px;padding:13px;display:flex;flex-direction:column;gap:5px}
   .alt-h{font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:16px;letter-spacing:.02em}
   .alt p{margin:0;font-size:13.5px;color:var(--app-ink-2);line-height:1.5}
 
@@ -285,32 +212,23 @@
 
   .mockstamp{
     position:absolute;top:8px;right:10px;z-index:3;
-    font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--app-ink-3);
-    border:1px solid var(--app-line);border-radius:3px;padding:2px 5px;
-    background:var(--app-bg);
+    font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--app-ink-3);border:1px solid var(--app-line);border-radius:3px;padding:2px 5px;background:var(--app-bg);
   }
 
-  /* ---- notes column ---- */
   .notes{display:flex;flex-direction:column;gap:26px;max-width:56ch;width:100%}
-  .note h2{
-    font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;
-    font-size:13px;letter-spacing:.15em;text-transform:uppercase;
-    color:var(--ink-3);margin:0 0 9px;
-  }
+  .note h2{font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);margin:0 0 9px}
   .note p{margin:0 0 10px;color:var(--ink-2);font-size:14.5px}
   .note p:last-child{margin-bottom:0}
   .note strong{color:var(--ink);font-weight:600}
 
-  .facts{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
-  .fact{display:grid;grid-template-columns:112px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:baseline}
-  @media (max-width:440px){ .fact{grid-template-columns:1fr;gap:2px} }
-  .fact dt{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
-  .fact dd{margin:0;color:var(--ink-2)}
-  .fact dd b{color:var(--ink);font-weight:600}
+  .steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+  .steps li{display:grid;grid-template-columns:26px 1fr;gap:13px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--ink-2);align-items:baseline}
+  .steps b{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);font-weight:400}
+  .steps span strong{color:var(--ink)}
 
-  .cant li{margin-bottom:8px;color:var(--ink-2);font-size:14.5px}
   .cant{padding-left:19px;margin:0}
+  .cant li{margin-bottom:8px;color:var(--ink-2);font-size:14.5px}
   .cant li::marker{color:var(--stop)}
 </style>
 
@@ -319,12 +237,12 @@
   <header class="mast">
     <span class="eyebrow">OMG Events · concept mock-up · 11 Sep 2026</span>
     <h1>Dock Call</h1>
-    <p class="standfirst">A phone tool for crew running a day of bump-ins around Perth. Parked at a stop, one tap: <em>will I make the next dock window, and if not, why not?</em></p>
+    <p class="standfirst">It knows where you are. You say where you’re going. It tells you what’s in the way and which run to take.</p>
   </header>
 
   <div class="caution">
     <span aria-hidden="true">⚠</span>
-    <span><strong>Nothing here is real.</strong> Every time, route, incident and camera view below is invented to show the idea. No live data is connected, and the camera picture is a drawing, not a photograph.</span>
+    <span><strong>Nothing here is real.</strong> Every time, route, incident and camera view is invented to show the idea. No live data is connected, and the camera picture is a drawing, not a photograph.</span>
   </div>
 
   <div class="stage">
@@ -332,46 +250,36 @@
     <div class="device">
       <div class="screen">
         <span class="mockstamp">Mock-up</span>
-
         <div class="statusbar"><span>6:24</span><span>Dock Call</span><span>82%</span></div>
 
-        <!-- ============ HOME ============ -->
+        <!-- ============ ASK ============ -->
         <div class="screen-body" id="home">
-          <div class="app-head">
-            <span class="app-date">Thursday 11 Sep</span>
-            <span class="app-run">RUN 3 · 5 STOPS</span>
-          </div>
-
-          <span class="label">Next stop</span>
-          <div class="next">
-            <div class="next-top">
-              <div>
-                <div class="venue">Convention Centre</div>
-                <div class="street">Mounts Bay Rd, Perth</div>
-              </div>
-              <div class="dock">
-                <div class="dock-time">07:00</div>
-                <div class="dock-bay">Dock 3</div>
-              </div>
-            </div>
-            <span class="chip wait">Tight · 2 min spare</span>
-          </div>
-
-          <button class="ask" id="askBtn" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
-              <rect x="9" y="2.5" width="6" height="11.5" rx="3"></rect>
-              <path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3.5"></path>
+          <div class="here">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.2"></circle><circle cx="12" cy="12" r="8.4" opacity=".45"></circle>
             </svg>
-            Ask about this run
-          </button>
+            <span>You’re on <b>Hutton St, Osborne Park</b></span>
+          </div>
 
-          <span class="label">Today’s run</span>
-          <div class="run">
-            <div class="leg done"><span class="leg-n">01</span><span><span class="leg-name">Depot, Osborne Park</span><br><span class="leg-sub">Truck loaded</span></span><span class="leg-time">05:40</span></div>
-            <div class="leg now"><span class="leg-n">02</span><span><span class="leg-name">Convention Centre</span><br><span class="leg-sub">Dock 3 · staging + rig</span></span><span class="leg-time">07:00</span></div>
-            <div class="leg"><span class="leg-n">03</span><span><span class="leg-name">RAC Arena</span><br><span class="leg-sub">Dock 2 · audio pickup</span></span><span class="leg-time">11:30</span></div>
-            <div class="leg"><span class="leg-n">04</span><span><span class="leg-name">Optus Stadium</span><br><span class="leg-sub">Gate 4 · deliver risers</span></span><span class="leg-time">15:00</span></div>
-            <div class="leg"><span class="leg-n">05</span><span><span class="leg-name">Depot, Osborne Park</span><br><span class="leg-sub">Unload + fuel</span></span><span class="leg-time">17:30</span></div>
+          <div class="dest">
+            <div class="dest-q">Where are you headed?</div>
+            <div class="dest-field"><span>Say it, or tap to type</span><kbd>Type</kbd></div>
+            <button class="ask" id="askBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                <rect x="9" y="2.5" width="6" height="11.5" rx="3"></rect>
+                <path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3.5"></path>
+              </svg>
+              Hold and speak
+            </button>
+          </div>
+
+          <span class="label">Places you go</span>
+          <div class="recents">
+            <button class="recent" type="button" data-go><span><span class="recent-name">Convention Centre</span><span class="recent-sub">Mounts Bay Rd, Perth</span></span><span class="recent-when">Tue</span></button>
+            <button class="recent" type="button" data-go><span><span class="recent-name">RAC Arena</span><span class="recent-sub">Wellington St, Perth</span></span><span class="recent-when">Mon</span></button>
+            <button class="recent" type="button" data-go><span><span class="recent-name">Optus Stadium</span><span class="recent-sub">Victoria Park Dr, Burswood</span></span><span class="recent-when">Fri</span></button>
+            <button class="recent" type="button" data-go><span><span class="recent-name">Crown Perth</span><span class="recent-sub">Great Eastern Hwy, Burswood</span></span><span class="recent-when">Last wk</span></button>
+            <button class="recent" type="button" data-go><span><span class="recent-name">Depot</span><span class="recent-sub">Osborne Park</span></span><span class="recent-when">Daily</span></button>
           </div>
         </div>
 
@@ -384,30 +292,34 @@
             </svg>
           </div>
           <span class="heard-label">Listening</span>
-          <div class="heard" id="heardText">“What’s the run to the convention centre?”</div>
+          <div class="heard">“I’m heading to the convention centre.”</div>
         </div>
 
         <!-- ============ ANSWER ============ -->
         <div class="screen-body" id="answer" hidden>
-          <div class="app-head">
-            <span class="app-date">To Dock 3</span>
-            <span class="app-run">06:24 · SPOKEN</span>
+          <div class="here">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.2"></circle><circle cx="12" cy="12" r="8.4" opacity=".45"></circle>
+            </svg>
+            <span>Osborne Park → <b>Convention Centre</b></span>
           </div>
 
-          <div class="verdict">
-            <span class="verdict-word">Tight</span>
-            <span class="verdict-line">You’ll make it, but there’s nothing spare. Go now.</span>
+          <span class="label">Take this run</span>
+          <div class="route">
+            <div class="route-name">Mitchell Fwy, exit at Mounts Bay Rd</div>
+            <div class="route-to">Still the quickest, even with the crash on it.</div>
+            <span class="chip wait">One issue on route</span>
           </div>
 
           <div class="figures">
             <div class="fig"><span class="fig-v">34 min</span><span class="fig-k">Drive</span></div>
             <div class="fig"><span class="fig-v">06:58</span><span class="fig-k">Arrive</span></div>
-            <div class="fig tight"><span class="fig-v">+2 min</span><span class="fig-k">Spare</span></div>
+            <div class="fig slow"><span class="fig-v">+12 min</span><span class="fig-k">On normal</span></div>
           </div>
 
           <div class="block">
-            <span class="label">Why it’s slow</span>
-            <p>Crash on the <strong>Mitchell Freeway southbound at Vincent St</strong>. Right lane blocked, reported 05:51. Normal run is 22 minutes.</p>
+            <span class="label">What’s in the way</span>
+            <p>Crash on the <strong>Mitchell Freeway southbound at Vincent St</strong>. Right lane blocked, reported 05:51. Nothing else on your run.</p>
           </div>
 
           <div class="block">
@@ -415,12 +327,8 @@
             <div class="cam">
               <svg viewBox="0 0 320 172" role="img" aria-label="Illustration of a freeway camera view showing queued traffic in two lanes before dawn">
                 <defs>
-                  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#131B26"/><stop offset="100%" stop-color="#2C3547"/>
-                  </linearGradient>
-                  <linearGradient id="tar" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#262D33"/><stop offset="100%" stop-color="#121619"/>
-                  </linearGradient>
+                  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#131B26"/><stop offset="100%" stop-color="#2C3547"/></linearGradient>
+                  <linearGradient id="tar" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#262D33"/><stop offset="100%" stop-color="#121619"/></linearGradient>
                 </defs>
                 <rect x="0" y="0" width="320" height="72" fill="url(#sky)"/>
                 <rect x="0" y="66" width="320" height="8" fill="#1A2027"/>
@@ -451,13 +359,13 @@
           </div>
 
           <div class="alt">
-            <span class="alt-h">If you want slack</span>
-            <p>Charles St through Leederville skips the blockage. Adds about 4 minutes on paper, but it’s predictable — no queue to sit in.</p>
+            <span class="alt-h">The other way</span>
+            <p>Charles St through Leederville misses it entirely. About 4 minutes longer on paper, but predictable — no queue to sit in.</p>
           </div>
 
           <div class="backrow">
-            <button class="btn-ghost" type="button" id="backBtn">Back to run</button>
-            <button class="btn-ghost primary" type="button" id="againBtn">Ask again</button>
+            <button class="btn-ghost" type="button" id="backBtn">New destination</button>
+            <button class="btn-ghost primary" type="button" id="againBtn">Check again</button>
           </div>
         </div>
 
@@ -467,35 +375,42 @@
     <aside class="notes">
       <div class="note">
         <h2>What you’re looking at</h2>
-        <p>Tap <strong>Ask about this run</strong> to see the whole flow: the driver speaks, the app answers out loud, and the answer ends with a decision rather than a map.</p>
-        <p>The point isn’t the ETA — Google already gives you that. It’s the four things underneath it: <strong>how much slack is left against the dock window</strong>, <strong>why</strong> it’s slow, <strong>what the camera actually shows</strong>, and <strong>what to do about it</strong>.</p>
+        <p>Tap <strong>Hold and speak</strong> — or any saved place — to see the whole thing. The driver never types an address in the normal case: the phone already knows where they are, and the destinations they use repeat.</p>
+        <p>The answer is deliberately not a map. It’s <strong>which run to take</strong>, <strong>what’s in the way</strong>, and <strong>what the camera actually shows</strong> — then a second option if the first one looks ugly.</p>
+      </div>
+
+      <div class="note">
+        <h2>The whole flow</h2>
+        <ol class="steps">
+          <li><b>01</b><span>Phone reports <strong>where you are</strong>. No typing.</span></li>
+          <li><b>02</b><span>You say or tap <strong>where you’re going</strong>.</span></li>
+          <li><b>03</b><span>It checks <strong>Main Roads incidents</strong> against your likely routes.</span></li>
+          <li><b>04</b><span>It reads the <strong>cameras along the way</strong> and describes them.</span></li>
+          <li><b>05</b><span>It <strong>speaks the answer</strong> and shows it on screen.</span></li>
+        </ol>
       </div>
 
       <div class="note">
         <h2>Choices made here</h2>
-        <dl class="facts">
-          <div class="fact"><dt>Screen</dt><dd>Always dark. It gets used at <b>4:30am in a truck cab</b>, not at a desk.</dd></div>
-          <div class="fact"><dt>Home view</dt><dd>The day’s run, not a search box. The driver already knows where they’re going.</dd></div>
-          <div class="fact"><dt>Verdict</dt><dd>One word first — <b>Clear</b>, <b>Tight</b> or <b>Late</b>. Detail underneath for whoever wants it.</dd></div>
-          <div class="fact"><dt>Spare time</dt><dd>The number that matters. Minutes against the dock booking, not minutes of driving.</dd></div>
-          <div class="fact"><dt>Camera</dt><dd>Described in words as well as shown. A driver glancing at a phone shouldn’t have to interpret a picture.</dd></div>
-          <div class="fact"><dt>Colour</dt><dd>Traffic-light greens, ambers and reds. Everyone reads them without being taught.</dd></div>
-        </dl>
+        <p><strong>Saved places beat a search box.</strong> Crew go to the same dozen venues. Typing an address one-handed at 6am is the thing to design out.</p>
+        <p><strong>The camera is described, not just shown.</strong> A driver glancing at a phone shouldn’t have to interpret a picture.</p>
+        <p><strong>Traffic-light colours.</strong> Green, amber, red. Nobody needs to be taught them.</p>
+        <p><strong>Always dark.</strong> It gets used before sunrise in a truck cab, not at a desk.</p>
       </div>
 
       <div class="note">
         <h2>What it deliberately won’t do</h2>
         <ul class="cant">
-          <li><strong>Nothing while moving.</strong> Designed for use parked at a stop. Phones in hands while driving is illegal in WA, and this shouldn’t encourage it.</li>
+          <li><strong>Nothing while moving.</strong> Built for use parked. Phones in hands while driving is illegal in WA, and this shouldn’t encourage it.</li>
+          <li><strong>No turn-by-turn.</strong> It tells you which run to take, then you drive it however you normally would. It isn’t trying to replace your nav.</li>
           <li><strong>No background tracking.</strong> Closed or locked, a web app stops. It can’t follow anyone around.</li>
-          <li><strong>No wake word.</strong> There’s no “hey app” on the web. It takes a tap to start.</li>
         </ul>
       </div>
 
       <div class="note">
         <h2>Before this can be built</h2>
-        <p>One question decides it: <strong>does Main Roads WA let us pull the camera images, and does the licence cover business use?</strong> If it doesn’t, the camera panel disappears and this becomes a much more ordinary app.</p>
-        <p>There’s a draft email sitting in the repo asking them exactly that.</p>
+        <p>One question decides it: <strong>does Main Roads WA let us pull the camera images, and does the licence cover business use?</strong> If not, the camera panel goes and this becomes a much more ordinary app.</p>
+        <p>There’s a draft email in the repo asking exactly that.</p>
       </div>
     </aside>
 
@@ -526,6 +441,9 @@
     document.getElementById('backBtn').addEventListener('click', function () {
       clearTimeout(timer);
       show(home);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-go]'), function (b) {
+      b.addEventListener('click', function () { clearTimeout(timer); show(answer); });
     });
   })();
 </script>

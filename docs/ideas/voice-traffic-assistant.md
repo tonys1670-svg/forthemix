@@ -308,3 +308,67 @@ above could each exceed it. They need a proper look before anyone commits.
 
 - Where do dock booking times live today?
 - How does a driver's run get into the app each morning?
+
+---
+
+# Scope cut — 11 Sep 2026
+
+Tony's call: **keep it simple.** The app is now one thing.
+
+> Geolocate me. I say or type my destination. Tell me any issues and which
+> route to take.
+
+## What's in
+
+1. The phone reports where you are — no typing.
+2. You say (or tap) where you're going.
+3. It checks Main Roads incidents against your likely routes.
+4. It reads the cameras along the way and describes them.
+5. It speaks the answer and shows it on screen.
+
+Saved places carry most of the input: crew go to the same dozen venues, so the
+common case is one tap, not an address typed one-handed at 6am.
+
+## What's out, and what that costs
+
+Dropped: the day's run sheet, dock booking times, multi-stop tracking, and the
+production-manager view.
+
+**The cost of dropping dock times** is the sharpest answer to "why not just use
+Google Maps". The app can no longer say *"you'll miss your 07:00 slot by six
+minutes"* — only *"34 minutes, and here's what's wrong."*
+
+What still can't be got anywhere else:
+
+- **A camera actually read and described**, rather than a coloured line on a map.
+- **Plain English on what's blocking you**, not just a slower number.
+- **An answer you can listen to** instead of reading while parked.
+
+Narrower, but real — and it removes the dependency that was most likely to
+sink the whole thing, since nobody yet knows where dock times live.
+
+## Also out of scope, deliberately
+
+- **Turn-by-turn navigation.** It names the run to take; the driver drives it
+  however they normally would. Not competing with anyone's nav app.
+- **Anything while the vehicle is moving.**
+
+## Effect on the build stages
+
+The earlier four-stage plan collapses to three, and Stage 2's hardest
+dependency disappears:
+
+1. **Where am I → where am I going → what's on that road.** Location, saved
+   places, Main Roads incident feed. No AI yet.
+2. **Add the route and the drive time**, so it can say which run to take and
+   how long.
+3. **Add the AI** — camera reads and the spoken answer. Still gated on the
+   Main Roads reply.
+
+Voice input folds into Stage 3 rather than being its own stage, because typing
+into a saved-places list is a perfectly good fallback if iPhone voice misbehaves.
+
+## Still open
+
+- Nothing blocking. The Main Roads email is the only thing standing between
+  this and a real Stage 1.
