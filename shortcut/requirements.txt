@@ -1,4 +1,0 @@
-# Short Cut beta runtime dependencies
-fastapi==0.111.0
-uvicorn==0.30.1
-httpx==0.27.0
