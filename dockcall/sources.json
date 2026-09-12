@@ -1,0 +1,17 @@
+{
+  "_comment": [
+    "Main Roads WA data endpoints.",
+    "",
+    "IMPORTANT: these URLs are UNVERIFIED. The Main Roads hosts were unreachable",
+    "from the environment this app was written in, so the exact endpoint could not",
+    "be confirmed. Run 'python check_sources.py' to test them. If a URL is wrong,",
+    "find the right one on the Main Roads open data portal (search for 'WebEOC Road",
+    "Incidents' and 'Traffic Cameras'), copy its GeoJSON / FeatureServer query URL",
+    "here, and re-run the check.",
+    "",
+    "The app works without these - it just won't have incident data, and will say so."
+  ],
+  "incidents_geojson": "https://services.arcgis.com/Fv0vOrzpJ4ISfpSq/arcgis/rest/services/WebEOC_Road_Incidents/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson",
+  "cameras_geojson": "",
+  "attribution": "Incident data © Main Roads Western Australia, CC BY 4.0"
+}

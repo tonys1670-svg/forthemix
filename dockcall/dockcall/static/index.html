@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1418">
+<title>Dock Call</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#0F1418; --card:#192128; --card-2:#222B32; --line:#2B353C;
+    --ink:#F0F4F6; --ink-2:#9CABB4; --ink-3:#72818A;
+    --go:#4CC17D; --wait:#F0B32B; --stop:#EC6B60;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+    padding-inline:16px;
+    padding-block:env(safe-area-inset-top,14px) calc(env(safe-area-inset-bottom,0px) + 28px);
+    max-width:520px; margin:0 auto;
+  }
+  .bar{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 2px 14px}
+  .wordmark{font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:23px;letter-spacing:.01em}
+  .badge{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--line);border-radius:3px;padding:2px 6px}
+
+  .label{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);padding:0 2px;display:block;margin-bottom:8px}
+
+  .notice{border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.5;margin-bottom:14px;border:1px solid var(--line);border-left-width:4px;background:var(--card)}
+  .notice.warn{border-left-color:var(--wait)}
+  .notice.bad{border-left-color:var(--stop)}
+  .notice.good{border-left-color:var(--go)}
+  .notice b{font-weight:600}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:14px}
+
+  .here{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-2);margin-bottom:12px;padding:0 2px}
+  .here .dot{width:9px;height:9px;border-radius:50%;background:var(--ink-3);flex:none}
+  .here.ok .dot{background:var(--go)}
+  .here.err .dot{background:var(--stop)}
+  .here b{color:var(--ink);font-weight:600}
+
+  button{font:inherit;cursor:pointer}
+  .btn{
+    width:100%;border:0;background:var(--ink);color:var(--bg);border-radius:11px;padding:14px 16px;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:18px;letter-spacing:.03em;
+  }
+  .btn:disabled{opacity:.45;cursor:default}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn svg{width:18px;height:18px;flex:none}
+  .btn+.btn{margin-top:9px}
+
+  .places{display:flex;flex-direction:column}
+  .place{
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;text-align:left;
+    background:none;border:0;border-bottom:1px solid var(--line);color:inherit;padding:13px 2px;
+  }
+  .place:last-child{border-bottom:0}
+  .place:disabled{opacity:.4}
+  .place-name{font-size:15px}
+  .place-detail{display:block;font-size:12px;color:var(--ink-3);margin-top:1px}
+  .place-go{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);flex:none}
+
+  .verdict{border:1px solid var(--line);border-left:4px solid var(--go);background:var(--card);border-radius:14px;padding:15px;margin-bottom:14px}
+  .verdict.warn{border-left-color:var(--wait)}
+  .verdict-word{font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:30px;line-height:1;text-transform:uppercase;color:var(--go)}
+  .verdict.warn .verdict-word{color:var(--wait)}
+  .verdict-line{color:var(--ink-2);font-size:14px;margin-top:5px}
+
+  .figures{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px}
+  .fig{background:var(--card);padding:12px 11px}
+  .fig-v{font-family:"IBM Plex Mono",monospace;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;display:block}
+  .fig-k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+
+  .inc{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px;background:var(--card)}
+  .inc-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .inc-title{font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:19px;letter-spacing:.02em}
+  .inc-when{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);flex:none}
+  .inc-road{font-size:13.5px;color:var(--ink-2);margin-top:3px}
+  .inc-detail{font-size:13.5px;margin-top:7px}
+  .inc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--line);border-radius:3px;padding:2px 6px}
+
+  .hand{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+  .hand a{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);
+    border-radius:11px;padding:13px 15px;
+    font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:17px;letter-spacing:.02em;
+  }
+  .hand a span{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:400}
+
+  .listening{text-align:center;padding:26px 10px}
+  .pulse{width:84px;height:84px;border-radius:50%;background:rgba(240,179,43,.15);display:grid;place-items:center;margin:0 auto 18px;position:relative}
+  .pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--wait);opacity:.5;animation:ring 1.6s ease-out infinite}
+  @keyframes ring{0%{transform:scale(.75);opacity:.6}100%{transform:scale(1.35);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.pulse::after{animation:none;opacity:.35}}
+  .pulse svg{width:32px;height:32px;color:var(--wait)}
+  .listening p{margin:0;color:var(--ink-2);font-size:14px}
+
+  .foot{color:var(--ink-3);font-size:11.5px;line-height:1.5;margin-top:22px;padding:0 2px;font-family:"IBM Plex Mono",monospace}
+  [hidden]{display:none!important}
+  button:focus-visible,a:focus-visible{outline:2px solid var(--wait);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span class="wordmark">Dock Call</span>
+  <span class="badge" id="badge">beta</span>
+</div>
+
+<div id="notices"></div>
+
+<!-- ===== ASK ===== -->
+<section id="askView">
+  <div class="here" id="here"><span class="dot"></span><span id="hereText">Finding you&hellip;</span></div>
+
+  <div class="card">
+    <span class="label">Where are you headed?</span>
+    <button class="btn" id="micBtn" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+        <rect x="9" y="2.5" width="6" height="11.5" rx="3"></rect>
+        <path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3.5"></path>
+      </svg>
+      Say the place
+    </button>
+    <button class="btn ghost" id="locBtn">Find me again</button>
+  </div>
+
+  <span class="label">Saved places</span>
+  <div class="places" id="places"></div>
+</section>
+
+<!-- ===== LISTENING ===== -->
+<section id="listenView" hidden>
+  <div class="listening">
+    <div class="pulse">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <rect x="9" y="2.5" width="6" height="11.5" rx="3"></rect>
+        <path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3.5"></path>
+      </svg>
+    </div>
+    <p id="listenText">Listening&hellip;</p>
+  </div>
+  <button class="btn ghost" id="listenCancel">Cancel</button>
+</section>
+
+<!-- ===== ANSWER ===== -->
+<section id="answerView" hidden>
+  <div class="here ok"><span class="dot"></span><span>Heading to <b id="destName"></b></span></div>
+  <div id="answerBody"></div>
+  <button class="btn ghost" id="restartBtn">Somewhere else</button>
+</section>
+
+<p class="foot" id="foot"></p>
+
+<script>
+(function () {
+  "use strict";
+
+  var state = { position: null, places: [], health: null, speaking: false };
+
+  var el = function (id) { return document.getElementById(id); };
+  var views = { ask: el("askView"), listen: el("listenView"), answer: el("answerView") };
+
+  function show(name) {
+    Object.keys(views).forEach(function (k) { views[k].hidden = (k !== name); });
+    window.scrollTo(0, 0);
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function notice(kind, html) {
+    var d = document.createElement("div");
+    d.className = "notice " + kind;
+    d.innerHTML = html;
+    el("notices").appendChild(d);
+  }
+
+  // ---- honest status banners -------------------------------------------- //
+  function renderHealth(h) {
+    state.health = h;
+    el("badge").textContent = "beta " + h.version;
+
+    if (h.demo) {
+      notice("warn", "<b>Demo mode.</b> The incidents below are invented, not real road conditions. " +
+        "Restart without DOCKCALL_DEMO=1 to use live Main Roads data.");
+      return;
+    }
+    if (h.incident_source === "not_configured") {
+      notice("bad", "<b>No incident source configured.</b> Nothing has been checked. " +
+        "Put a working Main Roads URL in <code>sources.json</code> and run " +
+        "<code>python check_sources.py</code>.");
+    } else if (h.incident_source !== "ok") {
+      notice("bad", "<b>Can't reach the incident data.</b> " + esc(h.incident_source) +
+        " Nothing has been checked, so an empty result here does not mean the roads are clear.");
+    }
+    if (!h.has_google_key) {
+      notice("warn", "<b>No drive times.</b> Without a Google Maps key this shows straight-line " +
+        "distance only. Tap through to Google Maps for a real ETA.");
+    }
+  }
+
+  // ---- where am I ------------------------------------------------------- //
+  function locate() {
+    var here = el("here"), text = el("hereText");
+    here.className = "here";
+    text.textContent = "Finding you…";
+    setPlacesEnabled(false);
+
+    if (!navigator.geolocation) {
+      here.className = "here err";
+      text.textContent = "This browser won't share your location.";
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        state.position = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        here.className = "here ok";
+        text.innerHTML = "You're at <b>" + state.position.lat.toFixed(4) + ", " +
+          state.position.lng.toFixed(4) + "</b> (±" + Math.round(pos.coords.accuracy) + " m)";
+        setPlacesEnabled(true);
+      },
+      function (err) {
+        here.className = "here err";
+        text.textContent = err.code === err.PERMISSION_DENIED
+          ? "Location permission refused. Dock Call needs it to know where you're starting from."
+          : "Couldn't get your location (" + esc(err.message) + ").";
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+    );
+  }
+
+  // ---- saved places ----------------------------------------------------- //
+  function renderPlaces(places) {
+    state.places = places;
+    var box = el("places");
+    box.textContent = "";
+    if (!places.length) {
+      notice("bad", "<b>No saved places.</b> Add some to <code>places.json</code> and restart.");
+      return;
+    }
+    places.forEach(function (p) {
+      var b = document.createElement("button");
+      b.className = "place";
+      b.type = "button";
+      b.disabled = true;
+      b.innerHTML = '<span><span class="place-name">' + esc(p.name) + "</span>" +
+        '<span class="place-detail">' + esc(p.detail || "") + "</span></span>" +
+        '<span class="place-go">Check &rarr;</span>';
+      b.addEventListener("click", function () { check(p.name); });
+      box.appendChild(b);
+    });
+  }
+
+  function setPlacesEnabled(on) {
+    Array.prototype.forEach.call(el("places").querySelectorAll("button"), function (b) {
+      b.disabled = !on;
+    });
+    el("micBtn").disabled = !on;
+  }
+
+  // ---- ask the server --------------------------------------------------- //
+  function check(placeName) {
+    if (!state.position) { locate(); return; }
+    show("answer");
+    el("destName").textContent = placeName;
+    el("answerBody").innerHTML = '<div class="card">Checking…</div>';
+
+    fetch("/api/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat: state.position.lat, lng: state.position.lng, place: placeName })
+    })
+      .then(function (r) {
+        return r.json().then(function (body) {
+          if (!r.ok) throw new Error(body.detail || ("HTTP " + r.status));
+          return body;
+        });
+      })
+      .then(renderAnswer)
+      .catch(function (e) {
+        el("answerBody").innerHTML = '<div class="notice bad"><b>That didn\'t work.</b> ' +
+          esc(e.message) + "</div>";
+      });
+  }
+
+  // ---- the answer ------------------------------------------------------- //
+  function renderAnswer(d) {
+    var parts = [];
+    var n = d.incidents.length;
+    var checked = d.incident_source === "ok" || d.incident_source === "demo";
+
+    if (!checked) {
+      parts.push('<div class="notice bad"><b>Not checked.</b> ' + esc(d.incident_source) +
+        " — treat this as no information, not as a clear run.</div>");
+    } else if (n === 0) {
+      parts.push('<div class="verdict"><div class="verdict-word">Clear</div>' +
+        '<div class="verdict-line">Nothing reported on the way. ' +
+        esc(d.incidents_checked) + " incidents checked across the network.</div></div>");
+    } else {
+      parts.push('<div class="verdict warn"><div class="verdict-word">' +
+        (n === 1 ? "One issue" : n + " issues") + "</div>" +
+        '<div class="verdict-line">On or beside your run to ' + esc(d.destination.name) +
+        ".</div></div>");
+    }
+
+    parts.push('<div class="figures">' +
+      '<div class="fig"><span class="fig-v">' +
+      (d.drive ? d.drive.minutes + " min" : d.straight_line_km + " km") +
+      '</span><span class="fig-k">' + (d.drive ? "Drive time" : "Straight line") + "</span></div>" +
+      '<div class="fig"><span class="fig-v">' + d.incidents_checked +
+      '</span><span class="fig-k">Checked</span></div></div>');
+
+    if (!d.drive && d.drive_status && d.drive_status !== "no_key") {
+      parts.push('<div class="notice warn"><b>No drive time.</b> ' + esc(d.drive_status) + "</div>");
+    }
+
+    d.incidents.forEach(function (i) {
+      parts.push('<div class="inc"><div class="inc-head">' +
+        '<span class="inc-title">' + esc(i.title) + "</span>" +
+        (i.reported ? '<span class="inc-when">' + esc(i.reported) + "</span>" : "") +
+        "</div>" +
+        (i.road ? '<div class="inc-road">' + esc(i.road) + "</div>" : "") +
+        (i.detail ? '<div class="inc-detail">' + esc(i.detail) + "</div>" : "") +
+        '<div class="inc-tags">' +
+        (i.status ? '<span class="tag">' + esc(i.status) + "</span>" : "") +
+        '<span class="tag">' + i.metres_off_route + " m off route</span>" +
+        "</div></div>");
+    });
+
+    parts.push('<span class="label" style="margin-top:18px">Drive it with</span>' +
+      '<div class="hand">' +
+      '<a href="' + esc(d.links.google_maps) + '" target="_blank" rel="noopener">Google Maps<span>route + eta</span></a>' +
+      '<a href="' + esc(d.links.waze) + '" target="_blank" rel="noopener">Waze<span>navigate</span></a>' +
+      '<a href="' + esc(d.links.travel_map) + '" target="_blank" rel="noopener">Main Roads Travel Map<span>cameras</span></a>' +
+      "</div>");
+
+    el("answerBody").innerHTML = parts.join("");
+    speak(spokenSummary(d));
+  }
+
+  // ---- speak the answer (free, built into the phone) -------------------- //
+  function spokenSummary(d) {
+    var n = d.incidents.length;
+    var time = d.drive ? d.drive.minutes + " minutes" : "about " + d.straight_line_km + " kilometres";
+    if (d.incident_source !== "ok" && d.incident_source !== "demo") {
+      return "I couldn't check the road data, so I don't know what's in the way. " +
+        d.destination.name + " is " + time + ".";
+    }
+    if (n === 0) return d.destination.name + ", " + time + ". Nothing reported on the way.";
+    var first = d.incidents[0];
+    return d.destination.name + ", " + time + ". " +
+      (n === 1 ? "One issue: " : n + " issues. First: ") +
+      first.title + (first.road ? " on " + first.road : "") + ". " +
+      (first.status || "");
+  }
+
+  function speak(text) {
+    if (!("speechSynthesis" in window) || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.0;
+      u.lang = "en-AU";
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* speaking is a bonus, never a requirement */ }
+  }
+
+  // ---- voice input (the risky bit - degrades to tapping) ---------------- //
+  var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  function matchPlace(said) {
+    var heard = said.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+    var best = null, bestScore = 0;
+    state.places.forEach(function (p) {
+      var words = p.name.toLowerCase().replace(/[^a-z0-9 ]/g, "").split(/\s+/);
+      var hits = words.filter(function (w) { return w.length > 2 && heard.indexOf(w) !== -1; }).length;
+      var score = hits / words.length;
+      if (score > bestScore) { bestScore = score; best = p; }
+    });
+    return bestScore >= 0.5 ? best : null;
+  }
+
+  function startListening() {
+    if (!Recognition) return;
+    var rec = new Recognition();
+    rec.lang = "en-AU";
+    rec.interimResults = false;
+    rec.maxAlternatives = 3;
+    state.speaking = true;
+    show("listen");
+    el("listenText").textContent = "Listening…";
+
+    rec.onresult = function (ev) {
+      var said = ev.results[0][0].transcript;
+      el("listenText").textContent = "“" + said + "”";
+      var place = matchPlace(said);
+      if (place) { check(place.name); return; }
+      show("ask");
+      notice("warn", "<b>Heard “" + esc(said) + "”</b> but couldn't match it to a saved place. " +
+        "Tap it from the list, or add it to <code>places.json</code>.");
+    };
+    rec.onerror = function (ev) {
+      show("ask");
+      notice("warn", "<b>Voice didn't work</b> (" + esc(ev.error) + "). Tap a place instead — " +
+        "this is the known weak spot on iPhones.");
+    };
+    rec.onend = function () {
+      state.speaking = false;
+      if (!views.answer.hidden) return;
+      if (!views.listen.hidden) show("ask");
+    };
+
+    el("listenCancel").onclick = function () { try { rec.abort(); } catch (e) {} show("ask"); };
+    try { rec.start(); } catch (e) { show("ask"); }
+  }
+
+  // ---- wire up ---------------------------------------------------------- //
+  el("locBtn").addEventListener("click", locate);
+  el("restartBtn").addEventListener("click", function () {
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    show("ask");
+  });
+  if (Recognition) {
+    el("micBtn").hidden = false;
+    el("micBtn").addEventListener("click", startListening);
+  }
+
+  fetch("/api/health").then(function (r) { return r.json(); }).then(renderHealth).catch(function () {
+    notice("bad", "<b>Can't reach the Dock Call server.</b> Is it still running?");
+  });
+
+  fetch("/api/places").then(function (r) { return r.json(); }).then(function (d) {
+    renderPlaces(d.places);
+    locate();
+  }).catch(function () {
+    notice("bad", "<b>Couldn't load saved places.</b>");
+  });
+
+  el("foot").textContent = "Dock Call beta — built for use while parked, never while driving. " +
+    "Incident data © Main Roads Western Australia, CC BY 4.0.";
+})();
+</script>
+</body>
+</html>

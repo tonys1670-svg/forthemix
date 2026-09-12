@@ -372,3 +372,63 @@ into a saved-places list is a perfectly good fallback if iPhone voice misbehaves
 
 - Nothing blocking. The Main Roads email is the only thing standing between
   this and a real Stage 1.
+
+---
+
+# Beta built — 12 Sep 2026
+
+Main Roads email: **sent** (11 Sep). Awaiting reply on camera access.
+
+A working beta now lives in `dockcall/` — a real FastAPI app, not a mock-up.
+See `dockcall/README.md` for how to run it and what state each part is in.
+
+## What it does
+
+Finds the driver by GPS, takes a destination by tap or voice, filters Main Roads
+incidents down to the ones on that run, reads the answer out loud, and offers
+hand-off buttons to Google Maps, Waze and the Main Roads Travel Map.
+
+## Tested and working
+
+- The corridor filter — the piece flagged earlier as the one genuinely fiddly
+  problem. Verified both directions: it flags a Mitchell Fwy incident on an
+  Osborne Park → CBD run (106 m off route, 59% along) and correctly ignores the
+  same incident on an Osborne Park → Fremantle run.
+- Graceful failure. With the data source unreachable it reports
+  **"not checked"**, never "clear". An app that implies empty roads because it
+  couldn't reach its data is worse than no app.
+- Input validation, unknown place names, and the demo mode banner.
+
+## Not yet proven
+
+- Anything phone-specific: GPS, spoken answers, the hand-off buttons. All built
+  to standard browser APIs, none tested on a handset.
+- Voice input. Expected to be the weak spot on iPhone; falls back to tapping
+  with a message explaining why.
+- Google drive times. Written, never executed — no Google access from the build
+  environment either. Optional; the app works without a key.
+
+## The blocker
+
+`sources.json` holds a **guessed** Main Roads incident URL. Every Main Roads
+host was unreachable from the build environment, so the real endpoint could not
+be looked up or tested. `check_sources.py` exists to verify it in one command
+and prints the field names so the parser can be adjusted if they differ.
+
+## On the three sources requested
+
+- **Main Roads WA** — the real data source. Free, CC BY.
+- **Google Maps** — hand-off button is free; the in-app drive time needs a paid
+  API key, read from `GOOGLE_MAPS_API_KEY`. Degrades cleanly without one.
+- **Waze** — hand-off only. No public way to read Waze traffic data exists; its
+  data-sharing programme is government-agency only. The button into the Waze app
+  is the whole of what's legitimately available.
+
+## Next
+
+1. Get the real Main Roads incident URL into `sources.json`, run
+   `check_sources.py`.
+2. Open it on an actual iPhone and an Android over an https tunnel — that tests
+   GPS, speech and the hand-off buttons in one go.
+3. Decide on a Google Maps key, once there's a view on whether the in-app drive
+   time is worth paying for given the free hand-off button.
