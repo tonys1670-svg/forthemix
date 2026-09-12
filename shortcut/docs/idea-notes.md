@@ -136,10 +136,10 @@ Lighter options that may deliver most of the value:
 - **Full native app.** Best experience, hands-free in the car, but the biggest
   build and the hardest adoption.
 
-## Working name: Dock Call
+## Working name: Short Cut
 
 "Bump-in" and "call time" are the words the crew already uses. The app's job is
-to answer one question — *will I make the dock call?* — so it takes that name.
+to answer one question — *will I make the short cut?* — so it takes that name.
 
 ## Artefacts so far
 
@@ -379,8 +379,8 @@ into a saved-places list is a perfectly good fallback if iPhone voice misbehaves
 
 Main Roads email: **sent** (11 Sep). Awaiting reply on camera access.
 
-A working beta now lives in `dockcall/` — a real FastAPI app, not a mock-up.
-See `dockcall/README.md` for how to run it and what state each part is in.
+A working beta now lives in `shortcut/` — a real FastAPI app, not a mock-up.
+See `shortcut/README.md` for how to run it and what state each part is in.
 
 ## What it does
 
@@ -432,3 +432,20 @@ and prints the field names so the parser can be adjusted if they differ.
    GPS, speech and the hand-off buttons in one go.
 3. Decide on a Google Maps key, once there's a view on whether the in-app drive
    time is worth paying for given the free hand-off button.
+
+---
+
+# Renamed and split out — 12 Sep 2026
+
+Tony's call: the app is **Short Cut**, and it is its own project, not part of
+ForTheMix.
+
+- Product name: **Short Cut** (was "Dock Call", which stopped fitting once the
+  dock-time scope was cut).
+- Repository: `Short_Cut`, separate from `forthemix`. They share no code and no
+  purpose; the only reason they were ever together is that this conversation
+  started in the ForTheMix repo.
+- Python package renamed `dockcall` → `shortcut`. The demo environment variable
+  is now `SHORTCUT_DEMO`.
+- These notes, the Main Roads email, and the design mock-up moved to `docs/`
+  inside the new project, so the whole history of the idea travels with it.

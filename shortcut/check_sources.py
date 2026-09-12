@@ -7,11 +7,11 @@ Run this first:
 
 It fetches each configured URL and reports what came back - how many incidents,
 and what the field names are. The field names matter: if they don't look like
-anything Dock Call recognises, it prints them so they can be added to the lists
-in dockcall/mainroads.py.
+anything Short Cut recognises, it prints them so they can be added to the lists
+in shortcut/mainroads.py.
 
 This exists because the endpoints in sources.json could NOT be verified when
-Dock Call was written - the Main Roads hosts were unreachable from that
+Short Cut was written - the Main Roads hosts were unreachable from that
 environment. Treat the URLs in sources.json as a starting guess.
 """
 from __future__ import annotations
@@ -22,7 +22,7 @@ import sys
 
 import httpx
 
-from dockcall import mainroads
+from shortcut import mainroads
 
 
 async def check(name: str, url: str) -> bool:
@@ -64,10 +64,10 @@ async def check(name: str, url: str) -> bool:
     print(f"  Field names: {sorted(props)}")
 
     parsed = mainroads.parse_incidents(payload)
-    print(f"  Dock Call could place {len(parsed)} of {len(features)} on a map.")
+    print(f"  Short Cut could place {len(parsed)} of {len(features)} on a map.")
     if parsed:
         first = parsed[0]
-        print("  First one, as Dock Call reads it:")
+        print("  First one, as Short Cut reads it:")
         for key in ("title", "road", "status", "detail", "reported"):
             print(f"    {key:9} {first[key] or '(nothing found)'}")
         unknown = [k for k in props if not any(
@@ -78,9 +78,9 @@ async def check(name: str, url: str) -> bool:
             for c in group
         )]
         if unknown and not first["detail"]:
-            print(f"\n  Fields Dock Call ignored: {sorted(unknown)}")
+            print(f"\n  Fields Short Cut ignored: {sorted(unknown)}")
             print("  If something useful is in there, add its name to the lists at the")
-            print("  top of dockcall/mainroads.py.")
+            print("  top of shortcut/mainroads.py.")
     return True
 
 

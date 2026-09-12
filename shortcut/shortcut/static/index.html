@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0F1418">
-<title>Dock Call</title>
+<title>Short Cut</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -111,7 +111,7 @@
 <body>
 
 <div class="bar">
-  <span class="wordmark">Dock Call</span>
+  <span class="wordmark">Short Cut</span>
   <span class="badge" id="badge">beta</span>
 </div>
 
@@ -194,7 +194,7 @@
 
     if (h.demo) {
       notice("warn", "<b>Demo mode.</b> The incidents below are invented, not real road conditions. " +
-        "Restart without DOCKCALL_DEMO=1 to use live Main Roads data.");
+        "Restart without SHORTCUT_DEMO=1 to use live Main Roads data.");
       return;
     }
     if (h.incident_source === "not_configured") {
@@ -234,7 +234,7 @@
       function (err) {
         here.className = "here err";
         text.textContent = err.code === err.PERMISSION_DENIED
-          ? "Location permission refused. Dock Call needs it to know where you're starting from."
+          ? "Location permission refused. Short Cut needs it to know where you're starting from."
           : "Couldn't get your location (" + esc(err.message) + ").";
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
@@ -438,7 +438,7 @@
   }
 
   fetch("/api/health").then(function (r) { return r.json(); }).then(renderHealth).catch(function () {
-    notice("bad", "<b>Can't reach the Dock Call server.</b> Is it still running?");
+    notice("bad", "<b>Can't reach the Short Cut server.</b> Is it still running?");
   });
 
   fetch("/api/places").then(function (r) { return r.json(); }).then(function (d) {
@@ -448,7 +448,7 @@
     notice("bad", "<b>Couldn't load saved places.</b>");
   });
 
-  el("foot").textContent = "Dock Call beta — built for use while parked, never while driving. " +
+  el("foot").textContent = "Short Cut beta — built for use while parked, never while driving. " +
     "Incident data © Main Roads Western Australia, CC BY 4.0.";
 })();
 </script>

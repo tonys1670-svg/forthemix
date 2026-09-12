@@ -1,4 +1,4 @@
-# Dock Call — beta
+# Short Cut — beta
 
 Tells a driver what's in the way between where they are and where they're going.
 
@@ -16,7 +16,6 @@ down says honestly which is which.
 You need Python 3.10 or newer.
 
 ```bash
-cd dockcall
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -51,7 +50,7 @@ Two ways around it:
 
 **Easiest — a temporary https address.** Install
 [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/),
-then with Dock Call already running:
+then with Short Cut already running:
 
 ```bash
 cloudflared tunnel --url http://localhost:8750
@@ -90,7 +89,7 @@ real https address and this whole problem goes away.
 ## The one thing that needs fixing
 
 `sources.json` holds the Main Roads incident URL, and **that URL is a guess.**
-Every Main Roads host was unreachable from the environment Dock Call was built
+Every Main Roads host was unreachable from the environment Short Cut was built
 in, so the real endpoint could not be looked up, let alone tested.
 
 To fix it:
@@ -101,10 +100,10 @@ To fix it:
 4. Run `python check_sources.py`.
 
 `check_sources.py` prints what came back, including the field names. If the
-field names aren't ones Dock Call recognises, it says so and tells you where to
-add them — the lists at the top of `dockcall/mainroads.py`.
+field names aren't ones Short Cut recognises, it says so and tells you where to
+add them — the lists at the top of `shortcut/mainroads.py`.
 
-**Until that URL works, Dock Call says "not checked" rather than "clear".** That
+**Until that URL works, Short Cut says "not checked" rather than "clear".** That
 distinction is deliberate: an app that reports empty roads because it couldn't
 reach its data is worse than no app at all.
 
@@ -138,7 +137,7 @@ the Google side anyway.
 
 ## Deliberately not doing
 
-- **Turn-by-turn navigation.** Dock Call says what's in the way and which run to
+- **Turn-by-turn navigation.** Short Cut says what's in the way and which run to
   take. Google and Waze do the driving directions, and they do them better.
 - **Anything while the vehicle is moving.** Built for use parked. Phone in hand
   while driving is illegal in WA.
@@ -154,7 +153,7 @@ run.py                    start it
 check_sources.py          test whether the Main Roads data works
 places.json               your saved destinations - edit this
 sources.json              Main Roads URLs - needs the real incident URL
-dockcall/
+shortcut/
   server.py               the web endpoints
   mainroads.py            reading and parsing incident data
   geo.py                  working out what's on your route
@@ -168,8 +167,14 @@ dockcall/
 to. The coordinates in there now are **approximate**: close enough to decide
 whether an incident is on the route, but check them before trusting them.
 
-## A note on where this lives
+## Where the background is
 
-Dock Call is sitting inside the ForTheMix repository because that's where the
-conversation started. It shares nothing with ForTheMix and should move to its
-own repository before it goes any further.
+`docs/` carries the thinking behind the app, kept as it was written:
+
+- `idea-notes.md` — the whole discussion: what it's for, what was cut and why,
+  the data sources, costs, and the risks still outstanding.
+- `mainroads-data-enquiry-email.md` — the enquiry sent to Main Roads WA on
+  11 Sep 2026 about camera access and licensing. The reply decides whether
+  camera reading is possible at all.
+- `mockup.html` — the clickable design mock-up this app was built from. Open it
+  in a browser. All invented data.

@@ -1,6 +1,6 @@
 """Hand-off links to the apps that already do navigation well.
 
-Dock Call does not do turn-by-turn. It works out what's in the way, then hands
+Short Cut does not do turn-by-turn. It works out what's in the way, then hands
 the driver to whichever app they prefer. These are all public URL schemes - no
 API keys, no terms to agree to, nothing fetched.
 

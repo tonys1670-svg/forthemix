@@ -1,6 +1,6 @@
 """Invented incidents, so the app can be looked at before the data source is confirmed.
 
-Run with DOCKCALL_DEMO=1 to use these instead of live Main Roads data. Every
+Run with SHORTCUT_DEMO=1 to use these instead of live Main Roads data. Every
 response is flagged `demo: true` and the page says so on screen - nothing here
 should ever be mistaken for a real road condition.
 """

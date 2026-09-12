@@ -1,6 +1,6 @@
 """Optional traffic-aware drive time from the Google Maps Routes API.
 
-This is the only part of Dock Call that needs a paid API key, and the only part
+This is the only part of Short Cut that needs a paid API key, and the only part
 that costs money to run. Without a key the app still works - it reports the
 straight-line distance instead of a drive time, and the Google Maps hand-off
 button gives the driver a real ETA in one tap.

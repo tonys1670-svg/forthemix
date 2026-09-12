@@ -1,4 +1,4 @@
-"""FastAPI application: serves the Dock Call page and answers route questions."""
+"""FastAPI application: serves the Short Cut page and answers route questions."""
 from __future__ import annotations
 
 import json
@@ -21,11 +21,11 @@ PLACES_PATH = Path(__file__).resolve().parent.parent / "places.json"
 # 1.5 km catches the road you're on without dragging in the next suburb.
 CORRIDOR_M = 1500.0
 
-app = FastAPI(title="Dock Call", version=VERSION)
+app = FastAPI(title="Short Cut", version=VERSION)
 
 
 def _demo_mode() -> bool:
-    return os.environ.get("DOCKCALL_DEMO", "").strip().lower() in ("1", "true", "yes")
+    return os.environ.get("SHORTCUT_DEMO", "").strip().lower() in ("1", "true", "yes")
 
 
 def _load_places() -> list[dict[str, Any]]:

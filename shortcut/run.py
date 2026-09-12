@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Start Dock Call.
+"""Start Short Cut.
 
     python run.py                 # start the server, print the URL
     python run.py --demo          # same, with invented incidents so you can see it work
@@ -39,16 +39,16 @@ def _lan_ip() -> str:
 
 def main() -> None:
     if "--demo" in sys.argv:
-        os.environ["DOCKCALL_DEMO"] = "1"
+        os.environ["SHORTCUT_DEMO"] = "1"
 
     port = _free_port()
     if "--port" in sys.argv:
         port = int(sys.argv[sys.argv.index("--port") + 1])
 
     ip = _lan_ip()
-    print(f"\n  Dock Call on this computer:  http://127.0.0.1:{port}")
-    print(f"  Dock Call on your phone:     http://{ip}:{port}")
-    if os.environ.get("DOCKCALL_DEMO"):
+    print(f"\n  Short Cut on this computer:  http://127.0.0.1:{port}")
+    print(f"  Short Cut on your phone:     http://{ip}:{port}")
+    if os.environ.get("SHORTCUT_DEMO"):
         print("\n  DEMO MODE - the incidents you see are invented, not real.")
     if not os.environ.get("GOOGLE_MAPS_API_KEY"):
         print("\n  No GOOGLE_MAPS_API_KEY set - no drive times. Everything else works.")
@@ -57,7 +57,7 @@ def main() -> None:
 
     import uvicorn
 
-    uvicorn.run("dockcall.server:app", host="0.0.0.0", port=port, log_level="info")
+    uvicorn.run("shortcut.server:app", host="0.0.0.0", port=port, log_level="info")
 
 
 if __name__ == "__main__":
